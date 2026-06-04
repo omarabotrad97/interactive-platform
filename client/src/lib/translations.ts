@@ -152,7 +152,26 @@ export const translations = {
         guide_step_4_title: "Leitner Flashcards",
         guide_step_4_desc: "Flippable cards designed to help you memorize key concepts. Grade them by difficulty to optimize your revision schedule.",
         guide_step_5_title: "Smart Notes",
-        guide_step_5_desc: "Write down rich markdown notes while studying. Your notes are saved automatically and can be exported as documents."
+        guide_step_5_desc: "Write down rich markdown notes while studying. Your notes are saved automatically and can be exported as documents.",
+
+        // Auth Pages
+        authWelcomeBack: "Welcome back to the House of Wisdom",
+        authSignUpTitle: "Join the Knowledge Community",
+        authSignUpSubtitle: "Create a free account to track your study sessions and earn XP.",
+        authNoAccount: "Don't have an account?",
+        authAlreadyAccount: "Already have an account?",
+        authOrContinue: "Or continue with",
+        authOrSignUpWith: "Or sign up with email",
+        authEmailLabel: "Email address",
+        authPasswordLabel: "Password",
+        authFirstNameLabel: "First Name",
+        authLastNameLabel: "Last Name",
+        authForgotPass: "Forgot password?",
+        authTermsAgree: "I agree to the Terms of Service and Privacy Policy",
+        authTermsError: "You must accept the terms and conditions",
+        authPassLengthError: "Password must be at least 8 characters",
+        authCreatingAccount: "Creating account...",
+        authQuote: "The head of knowledge is the desire for it, and its fruit is practicing it."
     },
     ar: {
         // Navigation
@@ -307,7 +326,26 @@ export const translations = {
         guide_step_4_title: "بطاقات الاستذكار (Flashcards)",
         guide_step_4_desc: "بطاقات متحركة ثلاثية الأبعاد لمراجعة المفاهيم بسرعة وتقييم مستواك لجدولة المراجعة اللاحقة الذكية.",
         guide_step_5_title: "المذكرة الذكية",
-        guide_step_5_desc: "دون ملاحظاتك الخاصة أثناء مشاهدة الدرس. يتم حفظها فوراً ويمكنك تصديرها كملف للمراجعة لاحقاً."
+        guide_step_5_desc: "دون ملاحظاتك الخاصة أثناء مشاهدة الدرس. يتم حفظها فوراً ويمكنك تصديرها كملف للمراجعة لاحقاً.",
+
+        // Auth Pages
+        authWelcomeBack: "مرحباً بك مجدداً في بيت الحكمة",
+        authSignUpTitle: "انضم إلى مجتمع المعرفة",
+        authSignUpSubtitle: "أنشئ حساباً مجانياً لتتبع جلسات مذاكرتك ونقاط خبرتك.",
+        authNoAccount: "ليس لديك حساب؟",
+        authAlreadyAccount: "لديك حساب بالفعل؟",
+        authOrContinue: "أو استمر باستخدام",
+        authOrSignUpWith: "أو سجل باستخدام البريد الإلكتروني",
+        authEmailLabel: "البريد الإلكتروني",
+        authPasswordLabel: "كلمة المرور",
+        authFirstNameLabel: "الاسم الأول",
+        authLastNameLabel: "اسم العائلة",
+        authForgotPass: "نسيت كلمة المرور؟",
+        authTermsAgree: "أوافق على شروط الخدمة وسياسة الخصوصية",
+        authTermsError: "يجب عليك قبول الشروط والأحكام",
+        authPassLengthError: "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+        authCreatingAccount: "جاري إنشاء الحساب...",
+        authQuote: "رأسُ العلمِ الرغبةُ فيه، وثمرته العملُ به."
     }
 };
 

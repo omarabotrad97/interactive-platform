@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Github, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Github, Mail, ArrowRight, BookOpen } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
+import { getTranslation } from '../../lib/translations';
 
 export default function SignUpPage() {
     const navigate = useNavigate();
-    const { updateUser, login } = useStore();
+    const { updateUser, login, lang, toggleLanguage } = useStore();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
@@ -23,12 +24,12 @@ export default function SignUpPage() {
         setError('');
 
         if (!termsAccepted) {
-            setError('You must accept the terms and conditions');
+            setError(getTranslation(lang, 'authTermsError'));
             return;
         }
 
         if (password.length < 8) {
-            setError('Password must be at least 8 characters');
+            setError(getTranslation(lang, 'authPassLengthError'));
             return;
         }
 
@@ -48,136 +49,180 @@ export default function SignUpPage() {
     };
 
     return (
-        <div className="min-h-screen flex text-gray-900 dark:text-gray-100 font-sans">
-            {/* Left Side - Image */}
-            <div className="hidden lg:block relative w-0 flex-1 overflow-hidden order-2">
-                <img
-                    className="absolute inset-0 h-full w-full object-cover"
-                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80"
-                    alt="Teams working together"
-                />
-                <div className="absolute inset-0 bg-purple-900/40 mix-blend-multiply" />
-                <div className="absolute bottom-0 left-0 right-0 p-12 text-white bg-gradient-to-t from-black/80 to-transparent">
-                    <h3 className="text-3xl font-bold mb-4">Join our community</h3>
-                    <ul className="space-y-3">
-                        {['Access to all premium courses', 'Hands-on projects and reviews', 'Certificate of completion', 'Mentorship from industry experts'].map((item, i) => (
-                            <li key={i} className="flex items-center gap-3 text-lg text-purple-100">
-                                <CheckCircle2 className="w-5 h-5 text-green-400" />
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-950 relative overflow-hidden transition-colors duration-200">
+            {/* Background elements */}
+            <div className="absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/20 via-white to-gray-50 dark:from-emerald-950/5 dark:via-gray-950 dark:to-gray-950" />
+                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-l from-emerald-100/10 to-transparent dark:from-emerald-900/5 blur-3xl opacity-50" />
+                <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-r from-amber-100/10 to-transparent dark:from-amber-900/5 blur-3xl opacity-50" />
             </div>
 
-            {/* Right Side - Form */}
-            <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-950 order-1">
-                <div className="mx-auto w-full max-w-sm lg:max-w-md">
-                    <div className="mb-10">
-                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Create your account
-                        </h2>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            Already have an account?{' '}
-                            <Link to="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
-                                Sign in
-                            </Link>
-                        </p>
+            {/* Mathematically generated repeating SVG geometric Arabesque background pattern */}
+            <div className="absolute inset-0 -z-5 pointer-events-none opacity-25 dark:opacity-10">
+                <svg className="absolute inset-0 w-full h-full stroke-emerald-600/10 dark:stroke-emerald-400/10 fill-none" width="100%" height="100%">
+                    <pattern id="auth-arabesque-signup" width="100" height="100" patternUnits="userSpaceOnUse">
+                        <path d="M 50,0 L 100,50 L 50,100 L 0,50 Z" strokeWidth="0.75" />
+                        <circle cx="50" cy="50" r="20" strokeWidth="0.75" />
+                        <path d="M 0,0 L 100,100 M 100,0 L 0,100" strokeWidth="0.75" />
+                        <polygon points="50,15 62,50 50,85 38,50" strokeWidth="0.5" />
+                        <polygon points="15,50 50,62 85,50 50,38" strokeWidth="0.5" />
+                        <circle cx="50" cy="50" r="5" className="fill-emerald-500/5 dark:fill-emerald-400/5" strokeWidth="0.5" />
+                    </pattern>
+                    <rect width="100%" height="100%" fill="url(#auth-arabesque-signup)" />
+                </svg>
+            </div>
+
+            {/* Floating Language Switcher */}
+            <div className="absolute top-6 right-6 left-6 flex justify-end z-20">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleLanguage}
+                    className="border-emerald-600/20 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400/20 dark:text-emerald-400 dark:hover:bg-emerald-950/20 text-xs font-bold px-3 py-1.5 h-auto transition-colors"
+                >
+                    {lang === 'ar' ? 'English' : 'العربية'}
+                </Button>
+            </div>
+
+            {/* Card Content */}
+            <div className="w-full max-w-md backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border border-emerald-100/50 dark:border-emerald-900/30 rounded-2xl shadow-xl shadow-emerald-950/5 overflow-hidden p-8 relative z-10 transition-all duration-300">
+                
+                {/* Logo and Greeting */}
+                <div className="flex flex-col items-center mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4 animate-pulse-ring">
+                        <BookOpen className="w-6 h-6 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight text-center leading-normal">
+                        {getTranslation(lang, 'authSignUpTitle')}
+                    </h2>
+                    <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 text-center font-semibold max-w-xs leading-relaxed">
+                        {getTranslation(lang, 'authSignUpSubtitle')}
+                    </p>
+                </div>
+
+                {/* Social Login */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                    <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                        <Github className="w-5 h-5 text-gray-900 dark:text-white" />
+                        <span className="font-semibold text-xs">GitHub</span>
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                        <Mail className="w-5 h-5 text-red-500" />
+                        <span className="font-semibold text-xs">Google</span>
+                    </Button>
+                </div>
+
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-emerald-100/30 dark:border-emerald-900/20" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                        <span className="bg-white/0 px-3 text-gray-400 dark:text-gray-500 font-semibold">
+                            {getTranslation(lang, 'authOrSignUpWith')}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            id="firstName"
+                            label={getTranslation(lang, 'authFirstNameLabel')}
+                            placeholder="John"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            className="focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-700/50"
+                            required
+                        />
+                        <Input
+                            id="lastName"
+                            label={getTranslation(lang, 'authLastNameLabel')}
+                            placeholder="Doe"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            className="focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-700/50"
+                            required
+                        />
                     </div>
 
-                    <div className="mt-8">
-                        {/* Social Login */}
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                            <Button variant="outline" className="w-full flex items-center justify-center gap-2">
-                                <Github className="w-5 h-5" />
-                                <span>GitHub</span>
-                            </Button>
-                            <Button variant="outline" className="w-full flex items-center justify-center gap-2">
-                                <Mail className="w-5 h-5" />
-                                <span>Google</span>
-                            </Button>
-                        </div>
+                    <Input
+                        id="email"
+                        type="email"
+                        label={getTranslation(lang, 'authEmailLabel')}
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-700/50"
+                        required
+                    />
 
-                        <div className="relative mb-6">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300 dark:border-gray-700" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="bg-white dark:bg-gray-950 px-2 text-gray-500">Or sign up with email</span>
-                            </div>
-                        </div>
+                    <Input
+                        id="password"
+                        type="password"
+                        label={getTranslation(lang, 'authPasswordLabel')}
+                        placeholder="At least 8 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-700/50"
+                        required
+                    />
 
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input
-                                    id="firstName"
-                                    label="First Name"
-                                    placeholder="John"
-                                    value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
-                                    required
-                                />
-                                <Input
-                                    id="lastName"
-                                    label="Last Name"
-                                    placeholder="Doe"
-                                    value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <Input
-                                id="email"
-                                type="email"
-                                label="Email address"
-                                placeholder="name@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
+                    <div className="flex items-start py-1">
+                        <div className="flex items-center h-5">
+                            <input
+                                id="terms"
+                                aria-describedby="terms-description"
+                                name="terms"
+                                type="checkbox"
+                                checked={termsAccepted}
+                                onChange={(e) => setTermsAccepted(e.target.checked)}
+                                className="w-4 h-4 border-gray-300 dark:border-gray-700 rounded text-emerald-600 focus:ring-emerald-500 dark:bg-gray-900 accent-emerald-600"
                             />
-
-                            <Input
-                                id="password"
-                                type="password"
-                                label="Password"
-                                placeholder="At least 8 characters"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-
-                            <div className="flex items-start">
-                                <div className="flex items-center h-5">
-                                    <input
-                                        id="terms"
-                                        aria-describedby="terms-description"
-                                        name="terms"
-                                        type="checkbox"
-                                        checked={termsAccepted}
-                                        onChange={(e) => setTermsAccepted(e.target.checked)}
-                                        className="w-4 h-4 border-gray-300 rounded text-indigo-600 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
-                                    />
-                                </div>
-                                <div className="ml-3 text-sm">
-                                    <label htmlFor="terms" className="font-medium text-gray-700 dark:text-gray-300">
-                                        I agree to the <a href="#" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">Terms of Service</a> and <a href="#" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">Privacy Policy</a>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {error && (
-                                <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
-                                    {error}
-                                </div>
-                            )}
-
-                            <Button type="submit" className="w-full h-11 text-base" size="lg" disabled={isLoading}>
-                                {isLoading ? 'Creating account...' : 'Create Account'}
-                                {!isLoading && <ArrowRight className="w-4 h-4 ml-2" />}
-                            </Button>
-                        </form>
+                        </div>
+                        <div className="mx-3 text-xs leading-normal">
+                            <label htmlFor="terms" className="font-semibold text-gray-500 dark:text-gray-400">
+                                {getTranslation(lang, 'authTermsAgree')}
+                            </label>
+                        </div>
                     </div>
+
+                    {error && (
+                        <div className="text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-950/20 px-3 py-2.5 rounded-lg border border-red-200/50 dark:border-red-900/30">
+                            {error}
+                        </div>
+                    )}
+
+                    <Button 
+                        type="submit" 
+                        className="w-full h-11 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-lg shadow-lg shadow-emerald-500/25 border-0 flex items-center justify-center gap-2 group transition-all" 
+                        size="lg" 
+                        disabled={isLoading}
+                    >
+                        <span>{isLoading ? getTranslation(lang, 'authCreatingAccount') : getTranslation(lang, 'signup')}</span>
+                        {!isLoading && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />}
+                    </Button>
+                </form>
+
+                {/* Footer Switch Link */}
+                <p className="mt-6 text-xs text-center text-gray-500 dark:text-gray-400 font-semibold">
+                    {getTranslation(lang, 'authAlreadyAccount')}{' '}
+                    <Link to="/auth/login" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 underline underline-offset-4">
+                        {getTranslation(lang, 'login')}
+                    </Link>
+                </p>
+
+                {/* Wisdom Quote */}
+                <div className="mt-6 pt-6 border-t border-emerald-100/50 dark:border-emerald-900/30 text-center">
+                    <p className="text-xs italic text-gray-400 dark:text-gray-500 font-medium px-4 leading-relaxed">
+                        "{getTranslation(lang, 'authQuote')}"
+                    </p>
                 </div>
             </div>
         </div>
