@@ -1,33 +1,44 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/Button';
+import { useStore } from '../../store/useStore';
+import { getTranslation } from '../../lib/translations';
 
 export default function CallToAction() {
+    const { lang } = useStore();
+
     return (
-        <section className="py-24 bg-indigo-600 dark:bg-indigo-900 relative overflow-hidden">
-            <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
-                <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-30"></div>
-                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500 rounded-full blur-3xl opacity-30"></div>
+        <section className="py-24 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 dark:from-emerald-950/40 dark:via-emerald-900/30 dark:to-teal-950/20 relative overflow-hidden transition-colors duration-200 border-t border-emerald-500/10">
+            {/* Background elements */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl" />
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 relative z-10 text-center text-white">
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to start your learning journey?</h2>
-                <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
-                    Join thousands of students and start learning the skills you need for your future career today.
+            <div className="max-w-4xl mx-auto px-4 relative z-10 text-center text-white space-y-6">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4">
+                    {getTranslation(lang, 'ctaTitle')}
+                </h2>
+                
+                <p className="text-sm sm:text-base text-emerald-100 max-w-2xl mx-auto font-medium leading-relaxed mb-8">
+                    {getTranslation(lang, 'ctaSubtitle')}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link to="/auth/signup">
-                        <Button size="lg" className="bg-white text-indigo-600 hover:bg-indigo-50 border-transparent h-14 px-8 text-lg w-full sm:w-auto">
-                            Join for Free
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-sm sm:max-w-none mx-auto animate-fade-in-up">
+                    <Link to="/auth/signup" className="w-full sm:w-auto">
+                        <Button size="lg" className="bg-white text-emerald-700 hover:bg-emerald-50 border-transparent h-14 px-8 text-base font-extrabold w-full sm:w-auto rounded-xl active:scale-95 transition-all shadow-lg shadow-black/5">
+                            {getTranslation(lang, 'getStarted')}
                         </Button>
                     </Link>
-                    <Link to="/auth/login">
-                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 h-14 px-8 text-lg w-full sm:w-auto">
-                            Login to Account
+                    <Link to="/auth/login" className="w-full sm:w-auto">
+                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 h-14 px-8 text-base font-extrabold w-full sm:w-auto rounded-xl active:scale-95 transition-all">
+                            {getTranslation(lang, 'login')}
                         </Button>
                     </Link>
                 </div>
-                <p className="mt-6 text-sm text-indigo-200">No credit card required for free courses.</p>
+
+                <p className="text-[10px] text-emerald-200/80 font-bold uppercase tracking-wider mt-4">
+                    ✓ {lang === 'ar' ? 'لا توجد مصاريف خفية - ابدأ في دقيقة واحدة' : 'No credit card required to start learning'}
+                </p>
             </div>
         </section>
     );

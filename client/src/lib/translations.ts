@@ -11,7 +11,47 @@ export const translations = {
         signup: "Sign Up",
         getStarted: "Get Started for Free",
         exploreCourses: "Explore Courses",
+        featuresLink: "Features",
+        coursesLink: "Courses",
+        testimonialsLink: "Testimonials",
         
+        // Landing Page
+        heroBadge: "Inspired by the House of Wisdom",
+        heroBanner: "Unlock Spaced Repetition (Anki) and Pomodoro Study Tools Weekly",
+        heroTitle: "Master Your Future with Online Learning",
+        heroSubtitle: "Empowering knowledge by blending modern interactive technology with the classical roots of Arab learning culture. Study at your own pace.",
+        
+        statsCourses: "Expert Courses",
+        statsHours: "Hours of Study",
+        statsLearners: "Active Learners",
+        
+        featuresTitle: "State-of-the-Art Learning Tools",
+        featuresSubtitle: "Everything you need to master complex skills, designed for focus and long-term memory retention.",
+        feature_timer: "Pomodoro Focus Timer",
+        feature_timer_desc: "Built-in study block timers to organize your schedule into high-productivity focus intervals followed by short rests.",
+        feature_cards: "Anki Spaced Repetition",
+        feature_cards_desc: "Dynamic cards using the SM-2 algorithm to schedule review intervals based on difficulty, boosting retention.",
+        feature_notes: "Smart Note Exporter",
+        feature_notes_desc: "Autosaving study notebooks that let you jot down markdown highlights while watching and export them instantly.",
+        
+        featuredCoursesTitle: "Featured Interactive Courses",
+        featuredCoursesSubtitle: "Jump directly into fully-simulated courses with quizzes, flashcards, and live progression tracking.",
+        
+        testimonialsTitle: "What Our Learners Say",
+        testimonialsSubtitle: "Discover how students are mastering new subjects and optimizing their revision habits.",
+        t1_name: "Yousef Al-Harbi",
+        t1_title: "Full-Stack Developer",
+        t1_comment: "The integrated Anki flashcards and time simulator completely changed how I memorize React hooks. Simply amazing UX!",
+        t2_name: "Laila Mansour",
+        t2_title: "AI Researcher",
+        t2_comment: "The House of Wisdom aesthetic is beautiful, and studying with the built-in Pomodoro timer keeps me focused for hours.",
+        
+        ctaTitle: "Ready to Accelerate Your Learning?",
+        ctaSubtitle: "Create a free account today to earn XP, unlock achievements, and study using our modern tools.",
+        
+        footerDesc: "Empowering minds globally by blending rich learning heritage with modern interactive web technologies.",
+        footerLinks: "Quick Links",
+
         // Dashboard
         welcomeBack: "Welcome back, {name}!",
         trackProgress: "Track your progress, stats, and achievements.",
@@ -126,7 +166,47 @@ export const translations = {
         signup: "إنشاء حساب",
         getStarted: "ابدأ مجاناً الآن",
         exploreCourses: "تصفح الدورات",
+        featuresLink: "المزايا",
+        coursesLink: "الدورات",
+        testimonialsLink: "الآراء",
         
+        // Landing Page
+        heroBadge: "مستوحى من ثقافة بيت الحكمة",
+        heroBanner: "تعلم متباعد ذكي (أنكي) وأدوات تركيز (بومودورو) تفاعلية أسبوعية",
+        heroTitle: "امتلك ناصية المستقبل بالتعلم المستمر",
+        heroSubtitle: "نمكن العقول والمهارات بدمج التكنولوجيا البرمجية الحديثة مع الإرث العريق للثقافة التعليمية العربية. تعلم بمرونة وسرعة.",
+        
+        statsCourses: "الدورات المتخصصة",
+        statsHours: "ساعات التعلم",
+        statsLearners: "المتعلمون النشطون",
+        
+        featuresTitle: "أدوات دراسة متطورة ومبتكرة",
+        featuresSubtitle: "كل ما تحتاجه لإتقان المهارات الصعبة والمفاهيم العميقة، مصمم خصيصاً للتركيز العالي وتقوية الذاكرة.",
+        feature_timer: "مؤقت البومودورو المدمج",
+        feature_timer_desc: "نظم جلسات المذاكرة في فترات تركيز مكثفة مدتها 25 دقيقة تليها استراحات قصيرة لزيادة إنتاجيتك واستيعابك.",
+        feature_cards: "بطاقات الذاكرة الذكية (Anki)",
+        feature_cards_desc: "بطاقات ثلاثية الأبعاد تفاعلية تستخدم خوارزمية SM-2 لتحديد أوقات مراجعة المفاهيم وتجنب النسيان.",
+        feature_notes: "المذكرة وتصدير التلخيصات",
+        feature_notes_desc: "دون ملاحظاتك وتلخيصك للدروس فورياً في كشكول مدمج واحفظها أو صدرها مباشرة بصيغة Markdown على جهازك.",
+        
+        featuredCoursesTitle: "دورات تفاعلية متميزة",
+        featuredCoursesSubtitle: "انطلق مباشرة في دراسة دورات غنية بالبيانات التفاعلية، الاختبارات، وبطاقات المذاكرة والتقدم الحي.",
+        
+        testimonialsTitle: "ماذا يقول طلابنا؟",
+        testimonialsSubtitle: "اكتشف كيف ساعدت أدواتنا الحديثة الطلاب في تحسين قدرتهم على التركيز وتذكر المفاهيم المعقدة.",
+        t1_name: "يوسف الحربي",
+        t1_title: "مطور ويب متكامل",
+        t1_comment: "نظام التكرار المتباعد المدمج ومحاكي الأيام غيّر تماماً طريقتي في حفظ دوال React. تجربة مستخدم مذهلة!",
+        t2_name: "ليلى منصور",
+        t2_title: "باحثة في الذكاء الاصطناعي",
+        t2_comment: "طابع بيت الحكمة العربي رائع ومميز، والمذاكرة مع مؤقت بومودورو المدمج تساعدني على التركيز لعدة ساعات متواصلة.",
+        
+        ctaTitle: "هل أنت جاهز لتسريع مهاراتك؟",
+        ctaSubtitle: "أنشئ حسابك المجاني اليوم وابدأ في تجميع نقاط الخبرة، إحراز الأوسمة، والمذاكرة بأحدث الأدوات الرقمية.",
+        
+        footerDesc: "نمكن العقول بربط عراقة الماضي بتكنولوجيا الويب التفاعلية الحديثة.",
+        footerLinks: "روابط سريعة",
+
         // Dashboard
         welcomeBack: "أهلاً بك مجدداً، {name}!",
         trackProgress: "تابع تقدمك، إحصاءاتك وإنجازاتك التعليمية.",
