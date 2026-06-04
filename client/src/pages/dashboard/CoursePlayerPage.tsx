@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { useStore, Lesson } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
+import { ensureBilingual, ensureBilingualOptions } from '../../lib/bilingual';
 import PomodoroTimer from '../../components/interactive/PomodoroTimer';
 import FlashcardStudy from '../../components/interactive/FlashcardStudy';
 
@@ -70,7 +71,7 @@ export default function CoursePlayerPage() {
     // Export notes to Markdown file
     const exportNotesToMarkdown = () => {
         const blob = new Blob([
-            `# Notes on ${currentLesson.title[lang]}\n\nCourse: ${course.title[lang]}\n\n${noteText}`
+            `# Notes on ${ensureBilingual(currentLesson.title)[lang]}\n\nCourse: ${ensureBilingual(course.title)[lang]}\n\n${noteText}`
         ], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -144,7 +145,7 @@ export default function CoursePlayerPage() {
                     {getTranslation(lang, 'myCourses')}
                 </Link>
                 <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-900/30">
-                    {course.title[lang]}
+                    {ensureBilingual(course.title)[lang]}
                 </div>
             </div>
 
@@ -201,7 +202,7 @@ export default function CoursePlayerPage() {
                                                 ? 'text-indigo-700 dark:text-indigo-400' 
                                                 : 'text-gray-700 dark:text-gray-300'
                                         }`}>
-                                            {lesson.title[lang]}
+                                            {ensureBilingual(lesson.title)[lang]}
                                         </p>
                                         <span className="text-[10px] text-gray-400 flex items-center gap-1 mt-1 font-semibold">
                                             <Clock className="w-3 h-3" />
@@ -234,7 +235,7 @@ export default function CoursePlayerPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                             <div>
                                 <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
-                                    {currentLesson.title[lang]}
+                                    {ensureBilingual(currentLesson.title)[lang]}
                                 </h1>
                             </div>
                             <Button
@@ -259,7 +260,7 @@ export default function CoursePlayerPage() {
 
                         {/* Lesson Content Explanations */}
                         <div className="prose dark:prose-invert max-w-none text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-                            <p>{currentLesson.content[lang]}</p>
+                            <p>{ensureBilingual(currentLesson.content)[lang]}</p>
                         </div>
                     </div>
 
@@ -279,11 +280,11 @@ export default function CoursePlayerPage() {
                                 </div>
                                 <CardContent className="p-6 space-y-4">
                                     <p className="text-base font-bold text-gray-800 dark:text-white leading-relaxed">
-                                        {q.text[lang]}
+                                        {ensureBilingual(q.text)[lang]}
                                     </p>
 
                                     <div className="grid grid-cols-1 gap-3">
-                                        {q.options[lang].map((option, oIdx) => {
+                                        {ensureBilingualOptions(q.options)[lang].map((option, oIdx) => {
                                             const isSelected = selectedAnswer === oIdx;
                                             
                                             let optionClass = 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850';

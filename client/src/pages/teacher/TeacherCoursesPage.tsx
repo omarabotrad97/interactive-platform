@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { Link } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Globe, EyeOff } from 'lucide-react';
+import { ensureBilingual } from '../../lib/bilingual';
 
 export default function TeacherCoursesPage() {
     const { lang, courses, loadCourses, createCourseAction, updateCourseAction, deleteCourseAction } = useStore();
@@ -42,11 +43,11 @@ export default function TeacherCoursesPage() {
         const course = courses.find(c => c.id === courseId);
         if (!course) return;
         try {
-            // Drizzle expects plain titles/descriptions on backend or we map them.
-            // On updates, we pass the title and description as plain strings.
+            const parsedTitle = ensureBilingual(course.title);
+            const parsedDesc = ensureBilingual(course.description);
             await updateCourseAction(courseId, {
-                title: typeof course.title === 'string' ? course.title : course.title.ar || course.title.en,
-                description: typeof course.description === 'string' ? course.description : course.description.ar || course.description.en,
+                title: JSON.stringify(parsedTitle),
+                description: JSON.stringify(parsedDesc),
                 published: !currentPublished
             });
         } catch (err) {
@@ -141,7 +142,7 @@ export default function TeacherCoursesPage() {
                             <div className="h-40 overflow-hidden relative bg-gray-100">
                                 <img 
                                     src={course.thumbnailUrl || 'https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=800&q=80'} 
-                                    alt={typeof course.title === 'string' ? course.title : course.title[lang]} 
+                                    alt={ensureBilingual(course.title)[lang]} 
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute top-3 right-3 left-3 flex justify-end">
@@ -158,10 +159,10 @@ export default function TeacherCoursesPage() {
                             <CardContent className="p-5 flex-1 flex flex-col justify-between">
                                 <div className="space-y-2">
                                     <h3 className="font-extrabold text-gray-900 dark:text-white text-base">
-                                        {typeof course.title === 'string' ? course.title : course.title[lang]}
+                                        {ensureBilingual(course.title)[lang]}
                                     </h3>
                                     <p className="text-xs text-gray-400 line-clamp-3 leading-relaxed">
-                                        {typeof course.description === 'string' ? course.description : course.description[lang]}
+                                        {ensureBilingual(course.description)[lang]}
                                     </p>
                                     <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
                                         {course.lessons.length} {lang === 'ar' ? 'درس تعليمي مضاف' : 'Lessons Added'}

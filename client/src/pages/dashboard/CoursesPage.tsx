@@ -6,15 +6,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
+import { ensureBilingual } from '../../lib/bilingual';
 
 export default function CoursesPage() {
     const { lang, courses, completedLessons } = useStore();
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredCourses = courses.filter(course =>
-        course.title[lang].toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description[lang].toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredCourses = courses.filter(course => {
+        const title = ensureBilingual(course.title)[lang] || '';
+        const desc = ensureBilingual(course.description)[lang] || '';
+        return title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               desc.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     return (
         <div className="space-y-6">
@@ -60,7 +63,7 @@ export default function CoursesPage() {
                             <div className="relative h-44 overflow-hidden">
                                 <img 
                                     src={course.thumbnailUrl} 
-                                    alt={course.title[lang]} 
+                                    alt={ensureBilingual(course.title)[lang]} 
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -72,10 +75,10 @@ export default function CoursesPage() {
                             
                             <CardHeader className="flex-1">
                                 <CardTitle className="line-clamp-1 font-bold text-lg text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                                    {course.title[lang]}
+                                    {ensureBilingual(course.title)[lang]}
                                 </CardTitle>
                                 <CardDescription className="line-clamp-3 text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium leading-relaxed">
-                                    {course.description[lang]}
+                                    {ensureBilingual(course.description)[lang]}
                                 </CardDescription>
                             </CardHeader>
                             

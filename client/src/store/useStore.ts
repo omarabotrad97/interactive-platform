@@ -247,6 +247,23 @@ const fallbackFlashcards: Flashcard[] = [
 // Map course flashcards in fallback
 fallbackCourses[0].flashcards = fallbackFlashcards;
 
+const parseBilingualClient = (value: any): { en: string; ar: string } => {
+    if (!value) return { en: '', ar: '' };
+    if (typeof value === 'object' && value !== null) {
+        return { en: value.en || '', ar: value.ar || '' };
+    }
+    if (typeof value === 'string') {
+        try {
+            if (value.startsWith('{')) {
+                const parsed = JSON.parse(value);
+                return parseBilingualClient(parsed);
+            }
+        } catch (e) {}
+        return { en: value, ar: value };
+    }
+    return { en: '', ar: '' };
+};
+
 export const useStore = create<AppState>()(
     persist(
         (set, get) => ({
@@ -812,10 +829,12 @@ export const useStore = create<AppState>()(
             },
             createCourseAction: async (courseData) => {
                 if (get().isOfflineMode) {
+                    const parsedTitle = parseBilingualClient(courseData.title);
+                    const parsedDesc = parseBilingualClient(courseData.description);
                     const newCourse: Course = {
                         id: `course-${Date.now()}`,
-                        title: { en: courseData.title, ar: courseData.title },
-                        description: { en: courseData.description, ar: courseData.description },
+                        title: parsedTitle,
+                        description: parsedDesc,
                         thumbnailUrl: courseData.thumbnailUrl || 'https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=800&q=80',
                         lessons: [],
                         flashcards: []
@@ -836,11 +855,13 @@ export const useStore = create<AppState>()(
             },
             updateCourseAction: async (courseId, courseData) => {
                 if (get().isOfflineMode) {
+                    const parsedTitle = parseBilingualClient(courseData.title);
+                    const parsedDesc = parseBilingualClient(courseData.description);
                     set(prev => ({
                         courses: prev.courses.map(c => c.id === courseId ? {
                             ...c,
-                            title: { en: courseData.title, ar: courseData.title },
-                            description: { en: courseData.description, ar: courseData.description },
+                            title: parsedTitle,
+                            description: parsedDesc,
                             thumbnailUrl: courseData.thumbnailUrl || c.thumbnailUrl
                         } : c)
                     }));
@@ -872,10 +893,12 @@ export const useStore = create<AppState>()(
             },
             addLessonAction: async (courseId, lessonData) => {
                 if (get().isOfflineMode) {
+                    const parsedTitle = parseBilingualClient(lessonData.title);
+                    const parsedContent = parseBilingualClient(lessonData.content);
                     const newLesson: Lesson = {
                         id: `lesson-${Date.now()}`,
-                        title: { en: lessonData.title, ar: lessonData.title },
-                        content: { en: lessonData.content || '', ar: lessonData.content || '' },
+                        title: parsedTitle,
+                        content: parsedContent,
                         videoUrl: lessonData.videoUrl || '',
                         quiz: []
                     };
@@ -898,13 +921,15 @@ export const useStore = create<AppState>()(
             },
             updateLessonAction: async (lessonId, lessonData) => {
                 if (get().isOfflineMode) {
+                    const parsedTitle = parseBilingualClient(lessonData.title);
+                    const parsedContent = parseBilingualClient(lessonData.content);
                     set(prev => ({
                         courses: prev.courses.map(c => ({
                             ...c,
                             lessons: c.lessons.map(l => l.id === lessonId ? {
                                 ...l,
-                                title: { en: lessonData.title, ar: lessonData.title },
-                                content: { en: lessonData.content || '', ar: lessonData.content || '' },
+                                title: parsedTitle,
+                                content: parsedContent,
                                 videoUrl: lessonData.videoUrl || l.videoUrl
                             } : l)
                         }))
@@ -942,7 +967,7 @@ export const useStore = create<AppState>()(
                 if (get().isOfflineMode) {
                     const formattedQuiz: QuizQuestion[] = quizData.questions.map((q, idx) => ({
                         id: `q-${idx}-${Date.now()}`,
-                        text: { en: q.text, ar: q.text },
+                        text: parseBilingualClient(q.text),
                         options: { en: q.options, ar: q.options },
                         correctAnswer: q.correctAnswer
                     }));

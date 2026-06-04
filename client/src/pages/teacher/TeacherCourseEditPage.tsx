@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { ArrowLeft, ArrowUp, ArrowDown, Trash2, Plus, Play, Sparkles, BookOpen, FileText } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { ensureBilingual } from '../../lib/bilingual';
 
 export default function TeacherCourseEditPage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -58,15 +59,13 @@ export default function TeacherCourseEditPage() {
             setCourse(found);
             
             // Parse bilingual properties or strings
-            const tEn = typeof found.title === 'object' ? found.title.en : found.title;
-            const tAr = typeof found.title === 'object' ? found.title.ar : found.title;
-            const dEn = typeof found.description === 'object' ? found.description.en : found.description || '';
-            const dAr = typeof found.description === 'object' ? found.description.ar : found.description || '';
+            const parsedTitle = ensureBilingual(found.title);
+            const parsedDesc = ensureBilingual(found.description);
 
-            setTitleEn(tEn);
-            setTitleAr(tAr);
-            setDescEn(dEn);
-            setDescAr(dAr);
+            setTitleEn(parsedTitle.en);
+            setTitleAr(parsedTitle.ar);
+            setDescEn(parsedDesc.en);
+            setDescAr(parsedDesc.ar);
             setThumbnailUrl(found.thumbnailUrl || '');
         }
     }, [courses, courseId]);
@@ -96,15 +95,13 @@ export default function TeacherCourseEditPage() {
     const handleSelectLesson = (lesson: Lesson) => {
         setSelectedLesson(lesson);
         
-        const titleEn = typeof lesson.title === 'object' ? lesson.title.en : lesson.title;
-        const titleAr = typeof lesson.title === 'object' ? lesson.title.ar : lesson.title;
-        const contentEn = typeof lesson.content === 'object' ? lesson.content.en : lesson.content || '';
-        const contentAr = typeof lesson.content === 'object' ? lesson.content.ar : lesson.content || '';
+        const parsedTitle = ensureBilingual(lesson.title);
+        const parsedContent = ensureBilingual(lesson.content);
 
-        setLessonTitleEn(titleEn);
-        setLessonTitleAr(titleAr);
-        setLessonContentEn(contentEn);
-        setLessonContentAr(contentAr);
+        setLessonTitleEn(parsedTitle.en);
+        setLessonTitleAr(parsedTitle.ar);
+        setLessonContentEn(parsedContent.en);
+        setLessonContentAr(parsedContent.ar);
         setLessonVideoUrl(lesson.videoUrl || '');
 
         // Populate quiz state
@@ -232,7 +229,8 @@ export default function TeacherCourseEditPage() {
         );
     }
 
-    const titleStr = typeof course.title === 'string' ? course.title : course.title[lang];
+    const parsedTitle = ensureBilingual(course.title);
+    const titleStr = parsedTitle[lang];
 
     return (
         <div className="space-y-6">
@@ -361,7 +359,8 @@ export default function TeacherCourseEditPage() {
                         <CardContent className="p-3">
                             <div className="space-y-1.5">
                                 {course.lessons.map((lesson, idx) => {
-                                    const lTitle = typeof lesson.title === 'string' ? lesson.title : lesson.title[lang];
+                                    const parsedTitle = ensureBilingual(lesson.title);
+                                    const lTitle = parsedTitle[lang];
                                     const isSelected = selectedLesson?.id === lesson.id;
                                     
                                     return (
