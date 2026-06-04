@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -72,4 +73,6 @@ export const router = createBrowserRouter([
             },
         ],
     },
-]);
+], {
+    basename: import.meta.env.BASE_URL
+});
