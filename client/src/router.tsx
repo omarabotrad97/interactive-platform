@@ -7,16 +7,20 @@ import LoginPage from './pages/auth/LoginPage';
 import SignUpPage from './pages/auth/SignUpPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 
-// Placeholder for now
-// const DashboardPage = () => <div className="p-10"><h1>Dashboard</h1><p>Protected content.</p></div>;
+// Import Teacher Panel components
+import TeacherLayout from './layouts/TeacherLayout';
+import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage';
+import TeacherCoursesPage from './pages/teacher/TeacherCoursesPage';
+import TeacherCourseEditPage from './pages/teacher/TeacherCourseEditPage';
+import TeacherStudentStatsPage from './pages/teacher/TeacherStudentStatsPage';
 
-// import PlaceholderPage from './pages/dashboard/PlaceholderPage';
 import CoursesPage from './pages/dashboard/CoursesPage';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import SettingsPage from './pages/dashboard/SettingsPage';
 import CoursePlayerPage from './pages/dashboard/CoursePlayerPage';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleProtectedRoute from './components/RoleProtectedRoute';
 
 export const router = createBrowserRouter([
     {
@@ -66,6 +70,33 @@ export const router = createBrowserRouter([
                             {
                                 path: 'settings',
                                 element: <SettingsPage />,
+                            },
+                        ]
+                    }
+                ]
+            },
+            {
+                element: <RoleProtectedRoute allowedRoles={['teacher', 'admin']} />,
+                children: [
+                    {
+                        path: 'teacher',
+                        element: <TeacherLayout />,
+                        children: [
+                            {
+                                index: true,
+                                element: <TeacherDashboardPage />,
+                            },
+                            {
+                                path: 'courses',
+                                element: <TeacherCoursesPage />,
+                            },
+                            {
+                                path: 'courses/:courseId/edit',
+                                element: <TeacherCourseEditPage />,
+                            },
+                            {
+                                path: 'students',
+                                element: <TeacherStudentStatsPage />,
                             },
                         ]
                     }

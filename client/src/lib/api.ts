@@ -28,6 +28,16 @@ export const courses = {
     getAll: () => api.get('/courses'),
     getById: (id: string) => api.get(`/courses/${id}`),
     create: (courseData: any) => api.post('/courses', courseData),
+    update: (id: string, courseData: any) => api.put(`/courses/${id}`, courseData),
+    delete: (id: string) => api.delete(`/courses/${id}`),
+    addLesson: (courseId: string, lessonData: any) => api.post(`/courses/${courseId}/lessons`, lessonData),
+    updateLesson: (lessonId: string, lessonData: any) => api.put(`/courses/lessons/${lessonId}`, lessonData),
+    deleteLesson: (lessonId: string) => api.delete(`/courses/lessons/${lessonId}`),
+    saveQuiz: (lessonId: string, quizData: any) => api.post(`/courses/lessons/${lessonId}/quiz`, quizData),
+};
+
+export const teacher = {
+    getStats: () => api.get('/teacher/stats'),
 };
 
 export const student = {

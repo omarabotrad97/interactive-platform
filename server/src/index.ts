@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import courseRoutes from './routes/courseRoutes';
 import studentRoutes from './routes/studentRoutes';
+import teacherRoutes from './routes/teacherRoutes';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date() });

@@ -7,6 +7,7 @@ interface User {
     lastName: string;
     email: string;
     bio: string;
+    role?: 'admin' | 'teacher' | 'student';
 }
 
 export interface Badge {
@@ -48,6 +49,7 @@ export interface Course {
     title: { en: string; ar: string };
     description: { en: string; ar: string };
     thumbnailUrl: string;
+    published?: boolean;
     lessons: Lesson[];
     flashcards: Flashcard[];
 }
@@ -109,6 +111,31 @@ interface AppState {
 
     // Offline / Local Simulation Mode Status
     isOfflineMode: boolean;
+
+    // Teacher & Admin Panel Actions & State
+    teacherStats: {
+        totalCourses: number;
+        totalStudents: number;
+        averageXp: number;
+        students: Array<{
+            id: number;
+            name: string;
+            email: string;
+            xp: number;
+            level: number;
+            badges: Badge[];
+            completedLessons: string[];
+            enrolledCourses: string[];
+        }>;
+    } | null;
+    loadTeacherStats: () => Promise<void>;
+    createCourseAction: (courseData: { title: string; description: string; thumbnailUrl?: string; published?: boolean }) => Promise<any>;
+    updateCourseAction: (courseId: string, courseData: { title: string; description: string; thumbnailUrl?: string; published?: boolean }) => Promise<any>;
+    deleteCourseAction: (courseId: string) => Promise<void>;
+    addLessonAction: (courseId: string, lessonData: { title: string; content?: string; videoUrl?: string; order: number }) => Promise<any>;
+    updateLessonAction: (lessonId: string, lessonData: { title: string; content?: string; videoUrl?: string; order: number }) => Promise<any>;
+    deleteLessonAction: (lessonId: string) => Promise<void>;
+    saveQuizAction: (lessonId: string, quizData: { title: string; questions: Array<{ text: string; options: string[]; correctAnswer: number }> }) => Promise<any>;
 }
 
 // Resilient Fallback Mock Data
@@ -271,6 +298,7 @@ export const useStore = create<AppState>()(
                             firstName: dbUser.name.split(' ')[0] || '',
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
+                            role: dbUser.role,
                             bio: 'متصل بقاعدة البيانات السحابية.',
                         }
                     });
@@ -308,6 +336,7 @@ export const useStore = create<AppState>()(
                             firstName: dbUser.name.split(' ')[0] || '',
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
+                            role: dbUser.role,
                             bio: 'متصل بقاعدة بيانات بيت الحكمة السحابية.',
                         }
                     });
@@ -327,6 +356,7 @@ export const useStore = create<AppState>()(
                             firstName: 'بيت الحكمة',
                             lastName: '(محاكاة محليّة)',
                             email: finalEmail,
+                            role: finalEmail === 'teacher@houseofwisdom.com' ? 'teacher' : 'student',
                             bio: 'وضع المحاكاة النشط. السيرفر الخلفي مغلق حالياً، ويتم حفظ بياناتك محلياً في المتصفح.',
                         },
                         courses: fallbackCourses,
@@ -352,6 +382,7 @@ export const useStore = create<AppState>()(
                             firstName: dbUser.name.split(' ')[0] || '',
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
+                            role: dbUser.role,
                             bio: 'حساب مسجل سحابياً بنجاح.',
                         }
                     });
@@ -369,6 +400,7 @@ export const useStore = create<AppState>()(
                             firstName: name.split(' ')[0] || name,
                             lastName: name.split(' ').slice(1).join(' ') || '(محاكاة)',
                             email: email,
+                            role: email === 'teacher@houseofwisdom.com' ? 'teacher' : 'student',
                             bio: 'حساب محاكاة محلي. السيرفر الخلفي غير متاح حالياً.',
                         },
                         courses: fallbackCourses,
@@ -387,7 +419,7 @@ export const useStore = create<AppState>()(
                     badges: [],
                     completedLessons: [],
                     notes: {},
-                    user: { firstName: '', lastName: '', email: '', bio: '' },
+                    user: { firstName: '', lastName: '', email: '', bio: '', role: undefined },
                     courses: [],
                     flashcards: []
                 });
@@ -745,6 +777,195 @@ export const useStore = create<AppState>()(
                 };
                 return { flashcards: [...state.flashcards, newCard] };
             }),
+
+            // Teacher Panel Actions
+            teacherStats: null,
+            loadTeacherStats: async () => {
+                if (get().isOfflineMode) {
+                    set({
+                        teacherStats: {
+                            totalCourses: get().courses.length,
+                            totalStudents: 1,
+                            averageXp: 450,
+                            students: [
+                                {
+                                    id: 99,
+                                    name: 'أحمد التلميذ',
+                                    email: 'student@example.com',
+                                    xp: 450,
+                                    level: 1,
+                                    badges: [{ key: 'first_step', name: 'الخطوة الأولى', description: 'أكملت أول درس لك بنجاح' }],
+                                    completedLessons: [],
+                                    enrolledCourses: [get().courses[0]?.title?.ar || 'React وتصميم الويب العصري']
+                                }
+                            ]
+                        }
+                    });
+                    return;
+                }
+                try {
+                    const res = await api.teacher.getStats();
+                    set({ teacherStats: res.data });
+                } catch (err) {
+                    console.error('Error loading teacher stats:', err);
+                }
+            },
+            createCourseAction: async (courseData) => {
+                if (get().isOfflineMode) {
+                    const newCourse: Course = {
+                        id: `course-${Date.now()}`,
+                        title: { en: courseData.title, ar: courseData.title },
+                        description: { en: courseData.description, ar: courseData.description },
+                        thumbnailUrl: courseData.thumbnailUrl || 'https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=800&q=80',
+                        lessons: [],
+                        flashcards: []
+                    };
+                    set(prev => ({
+                        courses: [...prev.courses, newCourse]
+                    }));
+                    return newCourse;
+                }
+                try {
+                    const res = await api.courses.create(courseData);
+                    await get().loadCourses();
+                    return res.data;
+                } catch (err) {
+                    console.error('Error creating course:', err);
+                    throw err;
+                }
+            },
+            updateCourseAction: async (courseId, courseData) => {
+                if (get().isOfflineMode) {
+                    set(prev => ({
+                        courses: prev.courses.map(c => c.id === courseId ? {
+                            ...c,
+                            title: { en: courseData.title, ar: courseData.title },
+                            description: { en: courseData.description, ar: courseData.description },
+                            thumbnailUrl: courseData.thumbnailUrl || c.thumbnailUrl
+                        } : c)
+                    }));
+                    return;
+                }
+                try {
+                    const res = await api.courses.update(courseId, courseData);
+                    await get().loadCourses();
+                    return res.data;
+                } catch (err) {
+                    console.error('Error updating course:', err);
+                    throw err;
+                }
+            },
+            deleteCourseAction: async (courseId) => {
+                if (get().isOfflineMode) {
+                    set(prev => ({
+                        courses: prev.courses.filter(c => c.id !== courseId)
+                    }));
+                    return;
+                }
+                try {
+                    await api.courses.delete(courseId);
+                    await get().loadCourses();
+                } catch (err) {
+                    console.error('Error deleting course:', err);
+                    throw err;
+                }
+            },
+            addLessonAction: async (courseId, lessonData) => {
+                if (get().isOfflineMode) {
+                    const newLesson: Lesson = {
+                        id: `lesson-${Date.now()}`,
+                        title: { en: lessonData.title, ar: lessonData.title },
+                        content: { en: lessonData.content || '', ar: lessonData.content || '' },
+                        videoUrl: lessonData.videoUrl || '',
+                        quiz: []
+                    };
+                    set(prev => ({
+                        courses: prev.courses.map(c => c.id === courseId ? {
+                            ...c,
+                            lessons: [...c.lessons, newLesson].sort((a, b) => (a.id > b.id ? 1 : -1))
+                        } : c)
+                    }));
+                    return newLesson;
+                }
+                try {
+                    const res = await api.courses.addLesson(courseId, lessonData);
+                    await get().loadCourses();
+                    return res.data;
+                } catch (err) {
+                    console.error('Error adding lesson:', err);
+                    throw err;
+                }
+            },
+            updateLessonAction: async (lessonId, lessonData) => {
+                if (get().isOfflineMode) {
+                    set(prev => ({
+                        courses: prev.courses.map(c => ({
+                            ...c,
+                            lessons: c.lessons.map(l => l.id === lessonId ? {
+                                ...l,
+                                title: { en: lessonData.title, ar: lessonData.title },
+                                content: { en: lessonData.content || '', ar: lessonData.content || '' },
+                                videoUrl: lessonData.videoUrl || l.videoUrl
+                            } : l)
+                        }))
+                    }));
+                    return;
+                }
+                try {
+                    const res = await api.courses.updateLesson(lessonId, lessonData);
+                    await get().loadCourses();
+                    return res.data;
+                } catch (err) {
+                    console.error('Error updating lesson:', err);
+                    throw err;
+                }
+            },
+            deleteLessonAction: async (lessonId) => {
+                if (get().isOfflineMode) {
+                    set(prev => ({
+                        courses: prev.courses.map(c => ({
+                            ...c,
+                            lessons: c.lessons.filter(l => l.id !== lessonId)
+                        }))
+                    }));
+                    return;
+                }
+                try {
+                    await api.courses.deleteLesson(lessonId);
+                    await get().loadCourses();
+                } catch (err) {
+                    console.error('Error deleting lesson:', err);
+                    throw err;
+                }
+            },
+            saveQuizAction: async (lessonId, quizData) => {
+                if (get().isOfflineMode) {
+                    const formattedQuiz: QuizQuestion[] = quizData.questions.map((q, idx) => ({
+                        id: `q-${idx}-${Date.now()}`,
+                        text: { en: q.text, ar: q.text },
+                        options: { en: q.options, ar: q.options },
+                        correctAnswer: q.correctAnswer
+                    }));
+                    set(prev => ({
+                        courses: prev.courses.map(c => ({
+                            ...c,
+                            lessons: c.lessons.map(l => l.id === lessonId ? {
+                                ...l,
+                                quiz: formattedQuiz
+                            } : l)
+                        }))
+                    }));
+                    return;
+                }
+                try {
+                    const res = await api.courses.saveQuiz(lessonId, quizData);
+                    await get().loadCourses();
+                    return res.data;
+                } catch (err) {
+                    console.error('Error saving quiz:', err);
+                    throw err;
+                }
+            },
 
             // Interactive Onboarding Guide
             isGuideOpen: false,

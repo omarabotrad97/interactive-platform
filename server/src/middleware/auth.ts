@@ -21,3 +21,15 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
         next();
     });
 };
+
+export const requireRole = (roles: string[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        if (!req.user) {
+            return res.sendStatus(401);
+        }
+        if (!roles.includes(req.user.role)) {
+            return res.sendStatus(403);
+        }
+        next();
+    };
+};
