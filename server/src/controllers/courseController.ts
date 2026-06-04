@@ -5,15 +5,25 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 
-const parseBilingual = (value: string | null | undefined): { en: string; ar: string } => {
+const parseBilingual = (value: any): { en: string; ar: string } => {
     if (!value) return { en: '', ar: '' };
-    try {
-        if (value.startsWith('{')) {
-            const parsed = JSON.parse(value);
-            return { en: parsed.en || '', ar: parsed.ar || '' };
-        }
-    } catch (e) {}
-    return { en: value, ar: value };
+    if (typeof value === 'object' && value !== null) {
+        const enVal = value.en || '';
+        const arVal = value.ar || '';
+        const resolvedEn = typeof enVal === 'string' && enVal.startsWith('{') ? parseBilingual(enVal).en : enVal;
+        const resolvedAr = typeof arVal === 'string' && arVal.startsWith('{') ? parseBilingual(arVal).ar : arVal;
+        return { en: resolvedEn || '', ar: resolvedAr || '' };
+    }
+    if (typeof value === 'string') {
+        try {
+            if (value.startsWith('{')) {
+                const parsed = JSON.parse(value);
+                return parseBilingual(parsed);
+            }
+        } catch (e) {}
+        return { en: value, ar: value };
+    }
+    return { en: '', ar: '' };
 };
 
 const parseBilingualOptions = (value: any): { en: string[]; ar: string[] } => {
@@ -21,14 +31,20 @@ const parseBilingualOptions = (value: any): { en: string[]; ar: string[] } => {
     if (Array.isArray(value)) {
         return { en: value, ar: value };
     }
-    if (typeof value === 'string' && value.startsWith('{')) {
-        try {
-            const parsed = JSON.parse(value);
-            return { en: parsed.en || [], ar: parsed.ar || [] };
-        } catch (e) {}
-    }
     if (typeof value === 'object' && value !== null) {
-        return { en: value.en || [], ar: value.ar || [] };
+        const enVal = value.en || [];
+        const arVal = value.ar || [];
+        const resolvedEn = typeof enVal === 'string' && (enVal.startsWith('{') || enVal.startsWith('[')) ? parseBilingualOptions(enVal).en : enVal;
+        const resolvedAr = typeof arVal === 'string' && (arVal.startsWith('{') || arVal.startsWith('[')) ? parseBilingualOptions(arVal).ar : arVal;
+        return { en: Array.isArray(resolvedEn) ? resolvedEn : [], ar: Array.isArray(resolvedAr) ? resolvedAr : [] };
+    }
+    if (typeof value === 'string') {
+        try {
+            if (value.startsWith('{') || value.startsWith('[')) {
+                const parsed = JSON.parse(value);
+                return parseBilingualOptions(parsed);
+            }
+        } catch (e) {}
     }
     return { en: [], ar: [] };
 };
