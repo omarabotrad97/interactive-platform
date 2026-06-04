@@ -3,7 +3,11 @@ import { Outlet } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 
 export default function RootLayout() {
-    const { lang } = useStore();
+    const { lang, checkAuth } = useStore();
+
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
 
     useEffect(() => {
         document.dir = lang === 'ar' ? 'rtl' : 'ltr';
@@ -18,4 +22,3 @@ export default function RootLayout() {
         </div>
     );
 }
-

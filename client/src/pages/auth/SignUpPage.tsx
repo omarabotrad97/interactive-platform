@@ -8,7 +8,7 @@ import { getTranslation } from '../../lib/translations';
 
 export default function SignUpPage() {
     const navigate = useNavigate();
-    const { updateUser, login, lang, toggleLanguage } = useStore();
+    const { register, lang, toggleLanguage } = useStore();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
@@ -35,17 +35,15 @@ export default function SignUpPage() {
 
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            updateUser({
-                firstName,
-                lastName,
-                email,
-            });
-            login();
-            setIsLoading(false);
+        try {
+            await register(`${firstName} ${lastName}`, email, password);
             navigate('/dashboard');
-        }, 1000);
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            setError(lang === 'ar' ? 'فشل إنشاء الحساب: البريد الإلكتروني مستخدم بالفعل' : 'Registration failed: Email already in use');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

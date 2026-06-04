@@ -16,6 +16,7 @@ export default function CoursePlayerPage() {
         completedLessons, 
         toggleLessonCompletion, 
         notes, 
+        loadNoteForLesson,
         saveNote, 
         addXP,
         badges
@@ -43,13 +44,17 @@ export default function CoursePlayerPage() {
     const [quizResult, setQuizResult] = useState<Record<string, 'correct' | 'incorrect'>>({}); // quizQuestionId -> status
     const [quizShowFeedback, setQuizShowFeedback] = useState(false);
 
-    // Sync note state when lesson changes
+    // Load note from database when active lesson changes
+    useEffect(() => {
+        loadNoteForLesson(currentLesson.id);
+        setQuizShowFeedback(false);
+    }, [currentLesson.id, loadNoteForLesson]);
+
+    // Sync note text state when loaded note updates
     useEffect(() => {
         setNoteText(notes[currentLesson.id] || '');
         setIsSavingNote(false);
-        // Reset quiz state for current lesson
-        setQuizShowFeedback(false);
-    }, [currentLesson.id, notes]);
+    }, [currentLesson.id, notes[currentLesson.id]]);
 
     // Autosave notes simulation
     const handleNoteChange = (text: string) => {

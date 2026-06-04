@@ -13,9 +13,61 @@ const courseSchema = z.object({
 
 export const getCourses = async (req: Request, res: Response) => {
     try {
-        const result = await db.select().from(courses);
-        res.json(result);
+        // Fetch courses with all sub-resources (lessons, quizzes with questions, flashcards)
+        const result = await db.query.courses.findMany({
+            with: {
+                lessons: {
+                    orderBy: (lessons, { asc }) => [asc(lessons.order)],
+                },
+                quizzes: {
+                    with: {
+                        questions: true,
+                    }
+                },
+                flashcards: true,
+            }
+        });
+
+        // Shape the courses to match the frontend expectations where quizzes are embedded inside lessons
+        const formattedResult = result.map(course => {
+            const formattedLessons = course.lessons.map(lesson => {
+                // Find any quiz attached to this lesson
+                const lessonQuiz = course.quizzes.find(q => q.lessonId === lesson.id);
+                return {
+                    id: String(lesson.id),
+                    title: { en: lesson.title, ar: lesson.title }, // In simulated db we just use same text or expand it
+                    content: { en: lesson.content || '', ar: lesson.content || '' },
+                    videoUrl: lesson.videoUrl || '',
+                    quiz: lessonQuiz ? lessonQuiz.questions.map(q => ({
+                        id: String(q.id),
+                        text: { en: q.text, ar: q.text },
+                        options: { 
+                            en: (q.options as string[]) || [], 
+                            ar: (q.options as string[]) || [] 
+                        },
+                        correctAnswer: q.correctAnswer
+                    })) : undefined
+                };
+            });
+
+            return {
+                id: String(course.id),
+                title: { en: course.title, ar: course.title },
+                description: { en: course.description || '', ar: course.description || '' },
+                thumbnailUrl: course.thumbnailUrl || '',
+                lessons: formattedLessons,
+                flashcards: course.flashcards.map(fc => ({
+                    id: String(fc.id),
+                    question: fc.question,
+                    answer: fc.answer,
+                    courseId: String(fc.courseId),
+                }))
+            };
+        });
+
+        res.json(formattedResult);
     } catch (error) {
+        console.error('Error fetching courses:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -23,14 +75,61 @@ export const getCourses = async (req: Request, res: Response) => {
 export const getCourseById = async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await db.select().from(courses).where(eq(courses.id, id));
+        const course = await db.query.courses.findFirst({
+            where: eq(courses.id, id),
+            with: {
+                lessons: {
+                    orderBy: (lessons, { asc }) => [asc(lessons.order)],
+                },
+                quizzes: {
+                    with: {
+                        questions: true,
+                    }
+                },
+                flashcards: true,
+            }
+        });
 
-        if (result.length === 0) {
+        if (!course) {
             return res.status(404).json({ message: 'Course not found' });
         }
 
-        res.json(result[0]);
+        const formattedLessons = course.lessons.map(lesson => {
+            const lessonQuiz = course.quizzes.find(q => q.lessonId === lesson.id);
+            return {
+                id: String(lesson.id),
+                title: { en: lesson.title, ar: lesson.title },
+                content: { en: lesson.content || '', ar: lesson.content || '' },
+                videoUrl: lesson.videoUrl || '',
+                quiz: lessonQuiz ? lessonQuiz.questions.map(q => ({
+                    id: String(q.id),
+                    text: { en: q.text, ar: q.text },
+                    options: { 
+                        en: (q.options as string[]) || [], 
+                        ar: (q.options as string[]) || [] 
+                    },
+                    correctAnswer: q.correctAnswer
+                })) : undefined
+            };
+        });
+
+        const formattedCourse = {
+            id: String(course.id),
+            title: { en: course.title, ar: course.title },
+            description: { en: course.description || '', ar: course.description || '' },
+            thumbnailUrl: course.thumbnailUrl || '',
+            lessons: formattedLessons,
+            flashcards: course.flashcards.map(fc => ({
+                id: String(fc.id),
+                question: fc.question,
+                answer: fc.answer,
+                courseId: String(fc.courseId),
+            }))
+        };
+
+        res.json(formattedCourse);
     } catch (error) {
+        console.error('Error fetching course by ID:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

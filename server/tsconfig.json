@@ -9,5 +9,6 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
-    }
+    },
+    "exclude": ["drizzle.config.ts", "dist", "node_modules"]
 }

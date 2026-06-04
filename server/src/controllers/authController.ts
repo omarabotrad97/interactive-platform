@@ -36,7 +36,16 @@ export const register = async (req: Request, res: Response) => {
             name,
             email,
             password: hashedPassword,
-        }).returning({ id: users.id, name: users.name, email: users.email, role: users.role });
+        }).returning({ 
+            id: users.id, 
+            name: users.name, 
+            email: users.email, 
+            role: users.role,
+            xp: users.xp,
+            level: users.level,
+            badges: users.badges,
+            completedLessons: users.completedLessons
+        });
 
         const user = newUser[0];
 
@@ -78,7 +87,11 @@ export const login = async (req: Request, res: Response) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                xp: user.xp,
+                level: user.level,
+                badges: user.badges,
+                completedLessons: user.completedLessons
             },
             token
         });
@@ -86,6 +99,33 @@ export const login = async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ message: error.errors });
         }
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const getProfile = async (req: Request, res: Response) => {
+    try {
+        // @ts-ignore
+        const userId = req.user.id;
+        const userResult = await db.select().from(users).where(eq(users.id, userId));
+        const user = userResult[0];
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            xp: user.xp,
+            level: user.level,
+            badges: user.badges,
+            completedLessons: user.completedLessons
+        });
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

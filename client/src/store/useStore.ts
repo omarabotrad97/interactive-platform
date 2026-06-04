@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import * as api from '../lib/api';
 
 interface User {
     firstName: string;
@@ -41,6 +42,7 @@ export interface Course {
     description: { en: string; ar: string };
     thumbnailUrl: string;
     lessons: Lesson[];
+    flashcards: Flashcard[];
 }
 
 interface AppState {
@@ -54,25 +56,29 @@ interface AppState {
 
     // Authentication
     isAuthenticated: boolean;
-    login: () => void;
+    login: (email?: string, password?: string) => Promise<void>;
     logout: () => void;
     user: User;
     updateUser: (user: Partial<User>) => void;
+    checkAuth: () => Promise<void>;
+    register: (name: string, email: string, password: string) => Promise<void>;
 
     // Courses & Lessons Completion
     courses: Course[];
     completedLessons: string[];
-    toggleLessonCompletion: (lessonId: string) => void;
+    loadCourses: () => Promise<void>;
+    toggleLessonCompletion: (lessonId: string) => Promise<void>;
 
     // Notes
     notes: Record<string, string>; // lessonId -> content
-    saveNote: (lessonId: string, content: string) => void;
+    loadNoteForLesson: (lessonId: string) => Promise<void>;
+    saveNote: (lessonId: string, content: string) => Promise<void>;
 
     // Gamification
     xp: number;
     level: number;
     badges: string[];
-    addXP: (amount: number) => void;
+    addXP: (amount: number) => Promise<void>;
     showXPNotification: { show: boolean; amount: number } | null;
     showLevelUpNotification: { show: boolean; level: number } | null;
     showBadgeNotification: { show: boolean; badgeKey: string } | null;
@@ -84,7 +90,7 @@ interface AppState {
     simulatedTime: number;
     simulateTimeForward: (days: number) => void;
     flashcards: Flashcard[];
-    rateFlashcard: (cardId: string, grade: 1 | 2 | 3 | 4) => void;
+    rateFlashcard: (cardId: string, grade: 1 | 2 | 3 | 4) => Promise<void>;
     addFlashcard: (courseId: string, question: string, answer: string) => void;
 
     // Interactive Onboarding Guide
@@ -94,168 +100,6 @@ interface AppState {
     closeGuide: () => void;
     setGuideStep: (step: number) => void;
 }
-
-// Initial mock courses populated in bilingual format
-const mockCourses: Course[] = [
-    {
-        id: 'react-101',
-        title: {
-            en: 'React & Modern Web Design',
-            ar: 'React وتصميم الويب العصري'
-        },
-        description: {
-            en: 'Build stunning, responsive interfaces with React, TailwindCSS, and state-of-the-art interactive modules.',
-            ar: 'ابنِ واجهات مذهلة ومتجاوبة باستخدام React و TailwindCSS ووحدات تفاعلية متطورة للغاية.'
-        },
-        thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80',
-        lessons: [
-            {
-                id: 'react-l1',
-                title: {
-                    en: '1. Introduction to Components',
-                    ar: '1. مقدمة في المكونات (Components)'
-                },
-                content: {
-                    en: 'React components are reusable building blocks for the UI. They are declared as JavaScript functions that return JSX, representing HTML code inside JavaScript code.',
-                    ar: 'مكونات React هي قطع برمجية قابلة لإعادة الاستخدام لواجهة المستخدم. يتم تعريفها كدوال JavaScript تقوم بإرجاع JSX الذي يمثل واجهات HTML داخل لغة JavaScript.'
-                },
-                videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-                quiz: [
-                    {
-                        id: 'q-react-1',
-                        text: {
-                            en: 'What does a React component return?',
-                            ar: 'ماذا ترجع مكونات React (Components)؟'
-                        },
-                        options: {
-                            en: ['A JSON configuration file', 'A JSX element representing UI', 'A Direct SQL Query', 'A Text File'],
-                            ar: ['ملف إعدادات JSON', 'عنصر JSX يمثل واجهة المستخدم', 'استعلام SQL مباشر', 'ملف نصي عادي']
-                        },
-                        correctAnswer: 1
-                    }
-                ]
-            },
-            {
-                id: 'react-l2',
-                title: {
-                    en: '2. Understanding React State',
-                    ar: '2. فهم حالة المكونات (React State)'
-                },
-                content: {
-                    en: 'State represents the dynamic, reactive data stored inside a component. When state values change, React automatically re-renders the component to reflect updates.',
-                    ar: 'تمثل الـ State البيانات الديناميكية والتفاعلية المخزنة داخل المكون. عندما تتغير قيمة الـ State، تقوم React تلقائياً بإعادة رسم المكون وتحديث الشاشة.'
-                },
-                videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-                quiz: [
-                    {
-                        id: 'q-react-2',
-                        text: {
-                            en: 'Why is state used in React?',
-                            ar: 'لماذا تُستخدم الـ State في React؟'
-                        },
-                        options: {
-                            en: ['To perform database queries', 'To handle dynamic/reactive data changes in the UI', 'To link stylesheets', 'To route pages'],
-                            ar: ['لإجراء استعلامات قواعد البيانات', 'التحكم بالبيانات الديناميكية والتفاعلية وتحديث الواجهة', 'لربط ملفات التنسيق الخارجي', 'لتوجيه الصفحات والمواقع']
-                        },
-                        correctAnswer: 1
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: 'ai-prompting',
-        title: {
-            en: 'AI & Prompt Engineering',
-            ar: 'الذكاء الاصطناعي وهندسة الأوامر'
-        },
-        description: {
-            en: 'Master the art of prompting LLMs, understanding context windows, zero-shot, and chain-of-thought engineering.',
-            ar: 'احترف مهارة توجيه النماذج اللغوية الضخمة وفهم سياق النوافذ، التلقين الصِفري وسلاسل الأفكار المنطقية.'
-        },
-        thumbnailUrl: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80',
-        lessons: [
-            {
-                id: 'ai-l1',
-                title: {
-                    en: '1. Fundamentals of LLMs',
-                    ar: '1. أساسيات النماذج اللغوية الضخمة'
-                },
-                content: {
-                    en: 'Large Language Models (LLMs) are deep learning neural networks trained on billions of parameters to predict the most likely next word in a sequence of text.',
-                    ar: 'النماذج اللغوية الضخمة (LLMs) هي شبكات عصبونية عميقة مدربة على مليارات المعاملات البرمجية للتنبؤ بالكلمة التالية الأكثر احتمالاً في نص معين.'
-                },
-                videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-                quiz: [
-                    {
-                        id: 'q-ai-1',
-                        text: {
-                            en: 'What is the primary mechanism of an LLM prediction?',
-                            ar: 'ما هي الآلية الأساسية لتنبؤات النموذج اللغوي الضخم؟'
-                        },
-                        options: {
-                            en: ['Compiling C++ code', 'Predicting the most likely next word in a sequence', 'Running a spreadsheet macro', 'Optimizing database tables'],
-                            ar: ['ترجمة وتجميع كود لغة C++', 'التنبؤ بالكلمة التالية الأكثر احتمالاً في النص المتتابع', 'تشغيل وحدات ماكرو في الجداول', 'تحسين أداء جداول قواعد البيانات']
-                        },
-                        correctAnswer: 1
-                    }
-                ]
-            }
-        ]
-    }
-];
-
-// Initial mock flashcards
-const mockFlashcards: Flashcard[] = [
-    {
-        id: 'fc-1',
-        courseId: 'react-101',
-        question: {
-            en: 'What is the Virtual DOM?',
-            ar: 'ما هو الـ Virtual DOM؟'
-        },
-        answer: {
-            en: 'A lightweight JavaScript representation of the real DOM. React uses it to diff changes and patch only modified elements, accelerating rendering.',
-            ar: 'تمثيل برمجى خفيف للـ DOM الحقيقي في الذاكرة. تستخدمه React لمعرفة الفروقات وتحديث الأجزاء المتغيرة فقط مما يسرع عملية العرض.'
-        },
-        repetitions: 0,
-        easeFactor: 2.5,
-        interval: 0,
-        nextReviewDue: 0
-    },
-    {
-        id: 'fc-2',
-        courseId: 'react-101',
-        question: {
-            en: 'What is a Pure Component in React?',
-            ar: 'ما هو الـ Pure Component في React؟'
-        },
-        answer: {
-            en: 'A component that returns the exact same UI output for the same props and state, avoiding redundant re-renders.',
-            ar: 'مكون يقوم بإرجاع نفس واجهة المستخدم تماماً طالما أن الـ props والـ state لم تتغير، مما يمنع عمليات إعادة التحديث غير الضرورية.'
-        },
-        repetitions: 0,
-        easeFactor: 2.5,
-        interval: 0,
-        nextReviewDue: 0
-    },
-    {
-        id: 'fc-3',
-        courseId: 'ai-prompting',
-        question: {
-            en: 'What is Zero-Shot Prompting?',
-            ar: 'ما هو التلقين الصفري (Zero-Shot)؟'
-        },
-        answer: {
-            en: 'Asking an LLM to complete a task directly without giving it any prior examples in the prompt.',
-            ar: 'أن تطلب من النموذج إنجاز مهمة معينة مباشرة دون تزويده بأي أمثلة توضيحية مسبقة في نص الطلب.'
-        },
-        repetitions: 0,
-        easeFactor: 2.5,
-        interval: 0,
-        nextReviewDue: 0
-    }
-];
 
 export const useStore = create<AppState>()(
     persist(
@@ -273,7 +117,7 @@ export const useStore = create<AppState>()(
             }),
 
             // Localization
-            lang: 'ar', // Default to Arabic as requested primarily
+            lang: 'ar', // Default to Arabic
             toggleLanguage: () => set((state) => {
                 const nextLang = state.lang === 'ar' ? 'en' : 'ar';
                 document.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
@@ -282,20 +126,144 @@ export const useStore = create<AppState>()(
 
             // Authentication
             isAuthenticated: false,
-            login: () => set({ isAuthenticated: true }),
-            logout: () => set({ isAuthenticated: false }),
             user: {
-                firstName: 'أحمد',
-                lastName: 'المنصوري',
-                email: 'ahmed.dev@example.com',
-                bio: 'مطور برمجيات طموح وشغوف بتعلم كل ما هو جديد ومبتكر في عالم الويب والذكاء الاصطناعي.'
+                firstName: '',
+                lastName: '',
+                email: '',
+                bio: ''
             },
             updateUser: (updatedUser) => set((state) => ({ user: { ...state.user, ...updatedUser } })),
 
+            checkAuth: async () => {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                try {
+                    const res = await api.auth.getProfile();
+                    const dbUser = res.data;
+                    set({
+                        isAuthenticated: true,
+                        xp: dbUser.xp,
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
+                        completedLessons: dbUser.completedLessons || [],
+                        user: {
+                            firstName: dbUser.name.split(' ')[0] || '',
+                            lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
+                            email: dbUser.email,
+                            bio: '',
+                        }
+                    });
+                    await get().loadCourses();
+                } catch (err) {
+                    console.error('Session expired or error checking auth:', err);
+                    localStorage.removeItem('token');
+                    set({ isAuthenticated: false });
+                }
+            },
+
+            login: async (email, password) => {
+                const finalEmail = email || 'teacher@houseofwisdom.com';
+                const finalPassword = password || 'teacher123';
+                
+                const res = await api.auth.login({ email: finalEmail, password: finalPassword });
+                const { user: dbUser, token } = res.data;
+                
+                localStorage.setItem('token', token);
+                set({
+                    isAuthenticated: true,
+                    xp: dbUser.xp,
+                    level: dbUser.level,
+                    badges: dbUser.badges || [],
+                    completedLessons: dbUser.completedLessons || [],
+                    user: {
+                        firstName: dbUser.name.split(' ')[0] || '',
+                        lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
+                        email: dbUser.email,
+                        bio: '',
+                    }
+                });
+                await get().loadCourses();
+            },
+
+            register: async (name, email, password) => {
+                const res = await api.auth.register({ name, email, password });
+                const { user: dbUser, token } = res.data;
+                
+                localStorage.setItem('token', token);
+                set({
+                    isAuthenticated: true,
+                    xp: dbUser.xp,
+                    level: dbUser.level,
+                    badges: dbUser.badges || [],
+                    completedLessons: dbUser.completedLessons || [],
+                    user: {
+                        firstName: dbUser.name.split(' ')[0] || '',
+                        lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
+                        email: dbUser.email,
+                        bio: '',
+                    }
+                });
+                await get().loadCourses();
+            },
+
+            logout: () => {
+                localStorage.removeItem('token');
+                set({
+                    isAuthenticated: false,
+                    xp: 0,
+                    level: 1,
+                    badges: [],
+                    completedLessons: [],
+                    notes: {},
+                    user: { firstName: '', lastName: '', email: '', bio: '' }
+                });
+            },
+
             // Courses
-            courses: mockCourses,
+            courses: [],
             completedLessons: [],
-            toggleLessonCompletion: (lessonId) => {
+            
+            loadCourses: async () => {
+                try {
+                    const res = await api.courses.getAll();
+                    const fetchedCourses = res.data;
+                    
+                    if (get().isAuthenticated) {
+                        const progressRes = await api.student.getFlashcardProgress();
+                        const progress = progressRes.data;
+                        
+                        const updatedCourses = fetchedCourses.map((c: any) => ({
+                            ...c,
+                            flashcards: c.flashcards.map((fc: any) => {
+                                const cardProgress = progress.find((p: any) => p.id === fc.id);
+                                return {
+                                    ...fc,
+                                    repetitions: cardProgress ? cardProgress.repetitions : 0,
+                                    easeFactor: cardProgress ? cardProgress.easeFactor : 2.5,
+                                    interval: cardProgress ? cardProgress.interval : 0,
+                                    nextReviewDue: cardProgress ? cardProgress.nextReviewDue : 0,
+                                };
+                            })
+                        }));
+                        
+                        const allFlashcards = updatedCourses.flatMap((c: any) => c.flashcards);
+                        set({ 
+                            courses: updatedCourses,
+                            flashcards: allFlashcards 
+                        });
+                    } else {
+                        const allFlashcards = fetchedCourses.flatMap((c: any) => c.flashcards);
+                        set({ 
+                            courses: fetchedCourses,
+                            flashcards: allFlashcards 
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error loading courses:', err);
+                }
+            },
+
+            toggleLessonCompletion: async (lessonId) => {
                 const state = get();
                 const isCompleted = state.completedLessons.includes(lessonId);
                 const nextCompleted = isCompleted
@@ -304,27 +272,78 @@ export const useStore = create<AppState>()(
 
                 set({ completedLessons: nextCompleted });
 
-                // Gain XP if completing a new lesson
-                if (!isCompleted) {
-                    state.addXP(100);
+                try {
+                    const xpToAdd = !isCompleted ? 100 : 0;
+                    
+                    let badgeToUnlock: any = null;
+                    if (!isCompleted && state.completedLessons.length === 0 && !state.badges.includes('first_step')) {
+                        badgeToUnlock = {
+                            key: 'first_step',
+                            name: 'الخطوة الأولى',
+                            description: 'أكملت أول درس لك بنجاح'
+                        };
+                    }
 
-                    // Unlock First Steps badge if it is the first lesson completed
-                    if (state.completedLessons.length === 0 && !state.badges.includes('first_step')) {
+                    const res = await api.student.updateGamification({
+                        xpToAdd,
+                        completedLessons: nextCompleted,
+                        badge: badgeToUnlock || undefined
+                    });
+
+                    const dbUser = res.data;
+                    set({
+                        xp: dbUser.xp,
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
+                    });
+
+                    if (xpToAdd > 0) {
+                        set({ showXPNotification: { show: true, amount: xpToAdd } });
+                        
+                        const expectedLevel = Math.floor(dbUser.xp / 500) + 1;
+                        if (expectedLevel > state.level) {
+                            setTimeout(async () => {
+                                await api.student.updateGamification({ level: expectedLevel });
+                                set({
+                                    level: expectedLevel,
+                                    showLevelUpNotification: { show: true, level: expectedLevel }
+                                });
+                            }, 600);
+                        }
+                    }
+
+                    if (badgeToUnlock) {
                         setTimeout(() => {
-                            set(prev => ({
-                                badges: [...prev.badges, 'first_step'],
-                                showBadgeNotification: { show: true, badgeKey: 'first_step' }
-                            }));
+                            set({ showBadgeNotification: { show: true, badgeKey: 'first_step' } });
                         }, 800);
                     }
+                } catch (err) {
+                    console.error('Error toggling lesson completion:', err);
                 }
             },
 
             // Notes
             notes: {},
-            saveNote: (lessonId, content) => set((state) => ({
-                notes: { ...state.notes, [lessonId]: content }
-            })),
+            loadNoteForLesson: async (lessonId) => {
+                try {
+                    const res = await api.student.getNote(lessonId);
+                    set((state) => ({
+                        notes: { ...state.notes, [lessonId]: res.data.content }
+                    }));
+                } catch (err) {
+                    console.error('Error loading note:', err);
+                }
+            },
+            saveNote: async (lessonId, content) => {
+                set((state) => ({
+                    notes: { ...state.notes, [lessonId]: content }
+                }));
+                try {
+                    await api.student.saveNote(parseInt(lessonId), content);
+                } catch (err) {
+                    console.error('Error saving note:', err);
+                }
+            },
 
             // Gamification
             xp: 0,
@@ -334,27 +353,32 @@ export const useStore = create<AppState>()(
             showLevelUpNotification: null,
             showBadgeNotification: null,
 
-            addXP: (amount) => {
-                const currentStore = get();
-                const newXP = currentStore.xp + amount;
-                // Threshold for level up: 500 XP per level
-                const expectedLevel = Math.floor(newXP / 500) + 1;
-                const leveledUp = expectedLevel > currentStore.level;
+            addXP: async (amount) => {
+                try {
+                    const state = get();
+                    const res = await api.student.updateGamification({ xpToAdd: amount });
+                    const dbUser = res.data;
+                    
+                    set({
+                        xp: dbUser.xp,
+                        showXPNotification: { show: true, amount }
+                    });
 
-                set({
-                    xp: newXP,
-                    showXPNotification: { show: true, amount }
-                });
-
-                if (leveledUp) {
-                    setTimeout(() => {
-                        set({
-                            level: expectedLevel,
-                            showLevelUpNotification: { show: true, level: expectedLevel }
-                        });
-                    }, 600);
+                    const expectedLevel = Math.floor(dbUser.xp / 500) + 1;
+                    if (expectedLevel > state.level) {
+                        setTimeout(async () => {
+                            await api.student.updateGamification({ level: expectedLevel });
+                            set({
+                                level: expectedLevel,
+                                showLevelUpNotification: { show: true, level: expectedLevel }
+                            });
+                        }, 600);
+                    }
+                } catch (err) {
+                    console.error('Error adding XP:', err);
                 }
             },
+            
             clearXPNotification: () => set({ showXPNotification: null }),
             clearLevelUpNotification: () => set({ showLevelUpNotification: null }),
             clearBadgeNotification: () => set({ showBadgeNotification: null }),
@@ -364,67 +388,96 @@ export const useStore = create<AppState>()(
             simulateTimeForward: (days) => set((state) => ({ 
                 simulatedTime: state.simulatedTime + days * 24 * 60 * 60 * 1000 
             })),
-            flashcards: mockFlashcards,
-            rateFlashcard: (cardId, grade) => {
+            
+            flashcards: [],
+            
+            rateFlashcard: async (cardId, grade) => {
                 const currentStore = get();
-                const targetCard = currentStore.flashcards.find(c => c.id === cardId);
-                if (!targetCard) return;
+                try {
+                    const res = await api.student.rateFlashcard(parseInt(cardId), grade);
+                    const savedProgress = res.data;
+                    
+                    const updatedCards = currentStore.flashcards.map(c => 
+                        c.id === cardId 
+                            ? { 
+                                ...c, 
+                                repetitions: savedProgress.repetitions, 
+                                easeFactor: savedProgress.easeFactor, 
+                                interval: savedProgress.interval, 
+                                nextReviewDue: savedProgress.nextReviewDue,
+                                lastGrade: grade 
+                              } 
+                            : c
+                    );
 
-                let repetitions = targetCard.repetitions || 0;
-                let easeFactor = targetCard.easeFactor || 2.5;
-                let interval = targetCard.interval || 0;
+                    const updatedCourses = currentStore.courses.map(course => ({
+                        ...course,
+                        flashcards: course.flashcards.map(fc => 
+                            fc.id === cardId 
+                                ? { 
+                                    ...fc, 
+                                    repetitions: savedProgress.repetitions, 
+                                    easeFactor: savedProgress.easeFactor, 
+                                    interval: savedProgress.interval, 
+                                    nextReviewDue: savedProgress.nextReviewDue,
+                                    lastGrade: grade 
+                                  }
+                                : fc
+                        )
+                    }));
 
-                if (grade === 1) {
-                    // Again / Reset
-                    repetitions = 0;
-                    interval = 0; // Show in 10 mins instead of days
-                    easeFactor = Math.max(1.3, easeFactor - 0.2);
-                } else {
-                    // Correct answers (Hard=2, Good=3, Easy=4)
-                    repetitions = repetitions + 1;
-                    if (repetitions === 1) {
-                        interval = grade === 2 ? 1 : grade === 3 ? 1 : 2; // Days
-                    } else if (repetitions === 2) {
-                        interval = grade === 2 ? 2 : grade === 3 ? 6 : 8; // Days
-                    } else {
-                        const multiplier = grade === 2 ? 1.2 : grade === 3 ? easeFactor : easeFactor * 1.3;
-                        interval = Math.ceil(interval * multiplier);
+                    set({ 
+                        flashcards: updatedCards,
+                        courses: updatedCourses
+                    });
+
+                    const xpToAdd = 15;
+                    
+                    let badgeToUnlock: any = null;
+                    if (currentStore.badges.length < 5 && !currentStore.badges.includes('leitner_pro')) {
+                        badgeToUnlock = {
+                            key: 'leitner_pro',
+                            name: 'محترف التكرار',
+                            description: 'راجعت 5 بطاقات استذكار تعليمية'
+                        };
                     }
 
-                    // Adjust Ease Factor (SM2 formula)
-                    const q = grade + 1; 
-                    easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
-                }
+                    const gamificationRes = await api.student.updateGamification({
+                        xpToAdd,
+                        badge: badgeToUnlock || undefined
+                    });
 
-                // Spacing offset math: Again = 10 mins, others = interval in days
-                const nextDueOffset = grade === 1 
-                    ? 10 * 60 * 1000 // 10 minutes
-                    : interval * 24 * 60 * 60 * 1000; // interval in days
+                    const dbUser = gamificationRes.data;
+                    set({
+                        xp: dbUser.xp,
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
+                        showXPNotification: { show: true, amount: xpToAdd }
+                    });
 
-                const nextReviewDue = currentStore.simulatedTime + nextDueOffset;
+                    const expectedLevel = Math.floor(dbUser.xp / 500) + 1;
+                    if (expectedLevel > currentStore.level) {
+                        setTimeout(async () => {
+                            await api.student.updateGamification({ level: expectedLevel });
+                            set({
+                                level: expectedLevel,
+                                showLevelUpNotification: { show: true, level: expectedLevel }
+                            });
+                        }, 600);
+                    }
 
-                const updatedCards = currentStore.flashcards.map(c => 
-                    c.id === cardId 
-                        ? { ...c, repetitions, easeFactor, interval, nextReviewDue, lastGrade: grade } 
-                        : c
-                );
-
-                set({ flashcards: updatedCards });
-
-                // Add XP for reviewing flashcards
-                currentStore.addXP(15);
-
-                // Unlock Leitner Pro badge on reviewing cards
-                if (currentStore.badges.length < 4 && !currentStore.badges.includes('leitner_pro')) {
-                    setTimeout(() => {
-                        set(prev => ({
-                            badges: [...prev.badges, 'leitner_pro'],
-                            showBadgeNotification: { show: true, badgeKey: 'leitner_pro' }
-                        }));
-                    }, 1000);
+                    if (badgeToUnlock) {
+                        setTimeout(() => {
+                            set({ showBadgeNotification: { show: true, badgeKey: 'leitner_pro' } });
+                        }, 1000);
+                    }
+                } catch (err) {
+                    console.error('Error rating flashcard:', err);
                 }
             },
+
             addFlashcard: (courseId, question, answer) => set((state) => {
+                // Keep local-only adding for student-created cards as a fallback
                 const newCard: Flashcard = {
                     id: `fc-user-${Date.now()}`,
                     courseId,

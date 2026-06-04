@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Github, Mail, ArrowRight, BookOpen } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -8,12 +9,27 @@ import { getTranslation } from '../../lib/translations';
 export default function LoginPage() {
     const navigate = useNavigate();
     const { login, lang, toggleLanguage } = useStore();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate login
-        login();
-        navigate('/dashboard');
+        setError('');
+        setIsLoading(true);
+
+        const formData = new FormData(e.currentTarget as HTMLFormElement);
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+
+        try {
+            await login(email, password);
+            navigate('/dashboard');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            setError(lang === 'ar' ? 'فشل تسجيل الدخول: البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Login failed: Invalid email or password');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -101,6 +117,7 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <Input
                         id="email"
+                        name="email"
                         type="email"
                         label={getTranslation(lang, 'authEmailLabel')}
                         placeholder="name@example.com"
@@ -111,6 +128,7 @@ export default function LoginPage() {
                     <div>
                         <Input
                             id="password"
+                            name="password"
                             type="password"
                             label={getTranslation(lang, 'authPasswordLabel')}
                             placeholder="••••••••"
@@ -124,13 +142,20 @@ export default function LoginPage() {
                         </div>
                     </div>
 
+                    {error && (
+                        <div className="text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-950/20 px-3 py-2.5 rounded-lg border border-red-200/50 dark:border-red-900/30">
+                            {error}
+                        </div>
+                    )}
+
                     <Button 
                         type="submit" 
                         className="w-full h-11 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-lg shadow-lg shadow-emerald-500/25 border-0 flex items-center justify-center gap-2 group transition-all"
                         size="lg"
+                        disabled={isLoading}
                     >
-                        <span>{getTranslation(lang, 'login')}</span>
-                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />
+                        <span>{isLoading ? getTranslation(lang, 'authCreatingAccount').replace('Creating', 'Logging in').replace('جاري إنشاء', 'جاري تسجيل') : getTranslation(lang, 'login')}</span>
+                        {!isLoading && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />}
                     </Button>
                 </form>
 
