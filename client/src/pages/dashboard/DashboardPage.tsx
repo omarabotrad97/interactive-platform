@@ -217,7 +217,7 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {allAvailableBadges.map((badge) => {
                                 const IconComponent = badge.icon;
-                                const isUnlocked = badges.includes(badge.key);
+                                const isUnlocked = badges.some(b => typeof b === 'string' ? b === badge.key : b.key === badge.key);
                                 return (
                                     <div 
                                         key={badge.key}

@@ -102,10 +102,11 @@ export default function CoursePlayerPage() {
             addXP(30);
             
             // Check if user unlocks Quiz Master badge
-            if (!badges.includes('quiz_master')) {
+            const hasQuizMaster = badges.some(b => typeof b === 'string' ? b === 'quiz_master' : b.key === 'quiz_master');
+            if (!hasQuizMaster) {
                 // Instantly unlocks the Quiz Master badge
                 useStore.setState(prev => ({
-                    badges: [...prev.badges, 'quiz_master'],
+                    badges: [...prev.badges, { key: 'quiz_master', name: 'بطل الاختبارات', description: 'حصلت على 100% في أحد الاختبارات' }],
                     showBadgeNotification: { show: true, badgeKey: 'quiz_master' }
                 }));
             }

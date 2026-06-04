@@ -9,6 +9,13 @@ interface User {
     bio: string;
 }
 
+export interface Badge {
+    key: string;
+    name: string;
+    description: string;
+}
+
+
 export interface Flashcard {
     id: string;
     question: { en: string; ar: string };
@@ -77,7 +84,7 @@ interface AppState {
     // Gamification
     xp: number;
     level: number;
-    badges: string[];
+    badges: Badge[];
     addXP: (amount: number) => Promise<void>;
     showXPNotification: { show: boolean; amount: number } | null;
     showLevelUpNotification: { show: boolean; level: number } | null;
@@ -99,7 +106,119 @@ interface AppState {
     openGuide: () => void;
     closeGuide: () => void;
     setGuideStep: (step: number) => void;
+
+    // Offline / Local Simulation Mode Status
+    isOfflineMode: boolean;
 }
+
+// Resilient Fallback Mock Data
+const fallbackCourses: Course[] = [
+    {
+        id: 'react-101',
+        title: {
+            en: 'React & Modern Web Design',
+            ar: 'React وتصميم الويب العصري'
+        },
+        description: {
+            en: 'Build stunning, responsive interfaces with React, TailwindCSS, and state-of-the-art interactive modules.',
+            ar: 'ابنِ واجهات مذهلة ومتجاوبة باستخدام React و TailwindCSS ووحدات تفاعلية متطورة للغاية.'
+        },
+        thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80',
+        lessons: [
+            {
+                id: 'react-l1',
+                title: {
+                    en: '1. Introduction to Components',
+                    ar: '1. مقدمة في المكونات (Components)'
+                },
+                content: {
+                    en: 'React components are reusable building blocks for the UI. They are declared as JavaScript functions that return JSX, representing HTML code inside JavaScript code.',
+                    ar: 'مكونات React هي قطع برمجية قابلة لإعادة الاستخدام لواجهة المستخدم. يتم تعريفها كدوال JavaScript تقوم بإرجاع JSX الذي يمثل واجهات HTML داخل لغة JavaScript.'
+                },
+                videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+                quiz: [
+                    {
+                        id: 'q-react-1',
+                        text: {
+                            en: 'What does a React component return?',
+                            ar: 'ماذا ترجع مكونات React (Components)؟'
+                        },
+                        options: {
+                            en: ['A JSON configuration file', 'A JSX element representing UI', 'A Direct SQL Query', 'A Text File'],
+                            ar: ['ملف إعدادات JSON', 'عنصر JSX يمثل واجهة المستخدم', 'استعلام SQL مباشر', 'ملف نصي عادي']
+                        },
+                        correctAnswer: 1
+                    }
+                ]
+            },
+            {
+                id: 'react-l2',
+                title: {
+                    en: '2. Understanding React State',
+                    ar: '2. فهم حالة المكونات (React State)'
+                },
+                content: {
+                    en: 'State represents the dynamic, reactive data stored inside a component. When state values change, React automatically re-renders the component to reflect updates.',
+                    ar: 'تمثل الـ State البيانات الديناميكية والتفاعلية المخزنة داخل المكون. عندما تتغير قيمة الـ State، تقوم React تلقائياً بإعادة رسم المكون وتحديث الشاشة.'
+                },
+                videoUrl: 'https://www.w3schools.com/html/movie.mp4',
+                quiz: [
+                    {
+                        id: 'q-react-2',
+                        text: {
+                            en: 'Why is state used in React?',
+                            ar: 'لماذا تُستخدم الـ State في React؟'
+                        },
+                        options: {
+                            en: ['To perform database queries', 'To handle dynamic/reactive data changes in the UI', 'To link stylesheets', 'To route pages'],
+                            ar: ['لإجراء استعلامات قواعد البيانات', 'التحكم بالبيانات الديناميكية والتفاعلية وتحديث الواجهة', 'لربط ملفات التنسيق الخارجي', 'لتوجيه الصفحات والمواقع']
+                        },
+                        correctAnswer: 1
+                    }
+                ]
+            }
+        ],
+        flashcards: []
+    }
+];
+
+const fallbackFlashcards: Flashcard[] = [
+    {
+        id: 'fc-1',
+        courseId: 'react-101',
+        question: {
+            en: 'What is the Virtual DOM?',
+            ar: 'ما هو الـ Virtual DOM؟'
+        },
+        answer: {
+            en: 'A lightweight JavaScript representation of the real DOM. React uses it to diff changes and patch only modified elements, accelerating rendering.',
+            ar: 'تمثيل برمجى خفيف للـ DOM الحقيقي في الذاكرة. تستخدمه React لمعرفة الفروقات وتحديث الأجزاء المتغيرة فقط مما يسرع عملية العرض.'
+        },
+        repetitions: 0,
+        easeFactor: 2.5,
+        interval: 0,
+        nextReviewDue: 0
+    },
+    {
+        id: 'fc-2',
+        courseId: 'react-101',
+        question: {
+            en: 'What is a Pure Component in React?',
+            ar: 'ما هو الـ Pure Component في React؟'
+        },
+        answer: {
+            en: 'A component that returns the exact same UI output for the same props and state, avoiding redundant re-renders.',
+            ar: 'مكون يقوم بإرجاع نفس واجهة المستخدم تماماً طالما أن الـ props والـ state لم تتغير، مما يمنع عمليات إعادة التحديث غير الضرورية.'
+        },
+        repetitions: 0,
+        easeFactor: 2.5,
+        interval: 0,
+        nextReviewDue: 0
+    }
+];
+
+// Map course flashcards in fallback
+fallbackCourses[0].flashcards = fallbackFlashcards;
 
 export const useStore = create<AppState>()(
     persist(
@@ -126,6 +245,7 @@ export const useStore = create<AppState>()(
 
             // Authentication
             isAuthenticated: false,
+            isOfflineMode: false,
             user: {
                 firstName: '',
                 lastName: '',
@@ -142,6 +262,7 @@ export const useStore = create<AppState>()(
                     const dbUser = res.data;
                     set({
                         isAuthenticated: true,
+                        isOfflineMode: false,
                         xp: dbUser.xp,
                         level: dbUser.level,
                         badges: dbUser.badges || [],
@@ -150,12 +271,18 @@ export const useStore = create<AppState>()(
                             firstName: dbUser.name.split(' ')[0] || '',
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
-                            bio: '',
+                            bio: 'متصل بقاعدة البيانات السحابية.',
                         }
                     });
                     await get().loadCourses();
                 } catch (err) {
-                    console.error('Session expired or error checking auth:', err);
+                    console.warn('API getProfile failed. Switching to offline simulation check.', err);
+                    // Localstorage fallback check (preserves session even if backend offline)
+                    const state = get();
+                    if (state.isAuthenticated && state.isOfflineMode) {
+                        // Maintain existing simulated session
+                        return;
+                    }
                     localStorage.removeItem('token');
                     set({ isAuthenticated: false });
                 }
@@ -165,57 +292,104 @@ export const useStore = create<AppState>()(
                 const finalEmail = email || 'teacher@houseofwisdom.com';
                 const finalPassword = password || 'teacher123';
                 
-                const res = await api.auth.login({ email: finalEmail, password: finalPassword });
-                const { user: dbUser, token } = res.data;
-                
-                localStorage.setItem('token', token);
-                set({
-                    isAuthenticated: true,
-                    xp: dbUser.xp,
-                    level: dbUser.level,
-                    badges: dbUser.badges || [],
-                    completedLessons: dbUser.completedLessons || [],
-                    user: {
-                        firstName: dbUser.name.split(' ')[0] || '',
-                        lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
-                        email: dbUser.email,
-                        bio: '',
-                    }
-                });
-                await get().loadCourses();
+                try {
+                    const res = await api.auth.login({ email: finalEmail, password: finalPassword });
+                    const { user: dbUser, token } = res.data;
+                    
+                    localStorage.setItem('token', token);
+                    set({
+                        isAuthenticated: true,
+                        isOfflineMode: false,
+                        xp: dbUser.xp,
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
+                        completedLessons: dbUser.completedLessons || [],
+                        user: {
+                            firstName: dbUser.name.split(' ')[0] || '',
+                            lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
+                            email: dbUser.email,
+                            bio: 'متصل بقاعدة بيانات بيت الحكمة السحابية.',
+                        }
+                    });
+                    await get().loadCourses();
+                } catch (err) {
+                    console.warn('API login failed. Falling back to local offline simulation mode:', err);
+                    
+                    // Fallback to offline prototype simulation
+                    set({
+                        isAuthenticated: true,
+                        isOfflineMode: true,
+                        xp: 250,
+                        level: 1,
+                        badges: [{ key: 'first_step', name: 'الخطوة الأولى', description: 'أكملت أول درس لك بنجاح' }],
+                        completedLessons: [],
+                        user: {
+                            firstName: 'بيت الحكمة',
+                            lastName: '(محاكاة محليّة)',
+                            email: finalEmail,
+                            bio: 'وضع المحاكاة النشط. السيرفر الخلفي مغلق حالياً، ويتم حفظ بياناتك محلياً في المتصفح.',
+                        },
+                        courses: fallbackCourses,
+                        flashcards: fallbackFlashcards
+                    });
+                }
             },
 
             register: async (name, email, password) => {
-                const res = await api.auth.register({ name, email, password });
-                const { user: dbUser, token } = res.data;
-                
-                localStorage.setItem('token', token);
-                set({
-                    isAuthenticated: true,
-                    xp: dbUser.xp,
-                    level: dbUser.level,
-                    badges: dbUser.badges || [],
-                    completedLessons: dbUser.completedLessons || [],
-                    user: {
-                        firstName: dbUser.name.split(' ')[0] || '',
-                        lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
-                        email: dbUser.email,
-                        bio: '',
-                    }
-                });
-                await get().loadCourses();
+                try {
+                    const res = await api.auth.register({ name, email, password });
+                    const { user: dbUser, token } = res.data;
+                    
+                    localStorage.setItem('token', token);
+                    set({
+                        isAuthenticated: true,
+                        isOfflineMode: false,
+                        xp: dbUser.xp,
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
+                        completedLessons: dbUser.completedLessons || [],
+                        user: {
+                            firstName: dbUser.name.split(' ')[0] || '',
+                            lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
+                            email: dbUser.email,
+                            bio: 'حساب مسجل سحابياً بنجاح.',
+                        }
+                    });
+                    await get().loadCourses();
+                } catch (err) {
+                    console.warn('API registration failed. Falling back to local offline simulation mode:', err);
+                    set({
+                        isAuthenticated: true,
+                        isOfflineMode: true,
+                        xp: 0,
+                        level: 1,
+                        badges: [],
+                        completedLessons: [],
+                        user: {
+                            firstName: name.split(' ')[0] || name,
+                            lastName: name.split(' ').slice(1).join(' ') || '(محاكاة)',
+                            email: email,
+                            bio: 'حساب محاكاة محلي. السيرفر الخلفي غير متاح حالياً.',
+                        },
+                        courses: fallbackCourses,
+                        flashcards: fallbackFlashcards
+                    });
+                }
             },
 
             logout: () => {
                 localStorage.removeItem('token');
                 set({
                     isAuthenticated: false,
+                    isOfflineMode: false,
                     xp: 0,
                     level: 1,
                     badges: [],
                     completedLessons: [],
                     notes: {},
-                    user: { firstName: '', lastName: '', email: '', bio: '' }
+                    user: { firstName: '', lastName: '', email: '', bio: '' },
+                    courses: [],
+                    flashcards: []
                 });
             },
 
@@ -224,6 +398,10 @@ export const useStore = create<AppState>()(
             completedLessons: [],
             
             loadCourses: async () => {
+                if (get().isOfflineMode) {
+                    // Maintain fallback mock data in offline mode
+                    return;
+                }
                 try {
                     const res = await api.courses.getAll();
                     const fetchedCourses = res.data;
@@ -260,6 +438,10 @@ export const useStore = create<AppState>()(
                     }
                 } catch (err) {
                     console.error('Error loading courses:', err);
+                    set({
+                        courses: fallbackCourses,
+                        flashcards: fallbackFlashcards
+                    });
                 }
             },
 
@@ -272,18 +454,45 @@ export const useStore = create<AppState>()(
 
                 set({ completedLessons: nextCompleted });
 
-                try {
-                    const xpToAdd = !isCompleted ? 100 : 0;
-                    
-                    let badgeToUnlock: any = null;
-                    if (!isCompleted && state.completedLessons.length === 0 && !state.badges.includes('first_step')) {
-                        badgeToUnlock = {
-                            key: 'first_step',
-                            name: 'الخطوة الأولى',
-                            description: 'أكملت أول درس لك بنجاح'
-                        };
-                    }
+                const xpToAdd = !isCompleted ? 100 : 0;
 
+                // Sync locally first
+                if (xpToAdd > 0) {
+                    set({ showXPNotification: { show: true, amount: xpToAdd } });
+                    
+                    const expectedLevel = Math.floor((state.xp + xpToAdd) / 500) + 1;
+                    if (expectedLevel > state.level) {
+                        setTimeout(() => {
+                            set({
+                                level: expectedLevel,
+                                showLevelUpNotification: { show: true, level: expectedLevel }
+                            });
+                        }, 600);
+                    }
+                    set((prev) => ({ xp: prev.xp + xpToAdd }));
+                }
+
+                let badgeToUnlock: any = null;
+                const hasFirstStep = state.badges.some(b => typeof b === 'string' ? b === 'first_step' : b.key === 'first_step');
+                if (!isCompleted && state.completedLessons.length === 0 && !hasFirstStep) {
+                    badgeToUnlock = {
+                        key: 'first_step',
+                        name: 'الخطوة الأولى',
+                        description: 'أكملت أول درس لك بنجاح'
+                    };
+                    setTimeout(() => {
+                        set((prev) => ({ 
+                            badges: [...prev.badges, { key: 'first_step', name: 'الخطوة الأولى', description: 'أكملت أول درس لك بنجاح' }],
+                            showBadgeNotification: { show: true, badgeKey: 'first_step' } 
+                        }));
+                    }, 800);
+                }
+
+                if (state.isOfflineMode) {
+                    return; // Done locally
+                }
+
+                try {
                     const res = await api.student.updateGamification({
                         xpToAdd,
                         completedLessons: nextCompleted,
@@ -296,52 +505,39 @@ export const useStore = create<AppState>()(
                         level: dbUser.level,
                         badges: dbUser.badges || [],
                     });
-
-                    if (xpToAdd > 0) {
-                        set({ showXPNotification: { show: true, amount: xpToAdd } });
-                        
-                        const expectedLevel = Math.floor(dbUser.xp / 500) + 1;
-                        if (expectedLevel > state.level) {
-                            setTimeout(async () => {
-                                await api.student.updateGamification({ level: expectedLevel });
-                                set({
-                                    level: expectedLevel,
-                                    showLevelUpNotification: { show: true, level: expectedLevel }
-                                });
-                            }, 600);
-                        }
-                    }
-
-                    if (badgeToUnlock) {
-                        setTimeout(() => {
-                            set({ showBadgeNotification: { show: true, badgeKey: 'first_step' } });
-                        }, 800);
-                    }
                 } catch (err) {
-                    console.error('Error toggling lesson completion:', err);
+                    console.warn('API error toggling completion, remaining in offline fallback state.', err);
                 }
             },
 
             // Notes
             notes: {},
             loadNoteForLesson: async (lessonId) => {
+                if (get().isOfflineMode) {
+                    return;
+                }
                 try {
                     const res = await api.student.getNote(lessonId);
                     set((state) => ({
                         notes: { ...state.notes, [lessonId]: res.data.content }
                     }));
                 } catch (err) {
-                    console.error('Error loading note:', err);
+                    console.warn('Error loading note dynamically, using offline memory:', err);
                 }
             },
             saveNote: async (lessonId, content) => {
                 set((state) => ({
                     notes: { ...state.notes, [lessonId]: content }
                 }));
+
+                if (get().isOfflineMode) {
+                    return;
+                }
+
                 try {
                     await api.student.saveNote(parseInt(lessonId), content);
                 } catch (err) {
-                    console.error('Error saving note:', err);
+                    console.warn('Error saving note to database, saved locally:', err);
                 }
             },
 
@@ -354,28 +550,40 @@ export const useStore = create<AppState>()(
             showBadgeNotification: null,
 
             addXP: async (amount) => {
+                const state = get();
+                const newXP = state.xp + amount;
+                const expectedLevel = Math.floor(newXP / 500) + 1;
+                const leveledUp = expectedLevel > state.level;
+
+                set({
+                    xp: newXP,
+                    showXPNotification: { show: true, amount }
+                });
+
+                if (leveledUp) {
+                    setTimeout(() => {
+                        set({
+                            level: expectedLevel,
+                            showLevelUpNotification: { show: true, level: expectedLevel }
+                        });
+                    }, 600);
+                }
+
+                if (state.isOfflineMode) {
+                    return;
+                }
+
                 try {
-                    const state = get();
                     const res = await api.student.updateGamification({ xpToAdd: amount });
                     const dbUser = res.data;
                     
                     set({
                         xp: dbUser.xp,
-                        showXPNotification: { show: true, amount }
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
                     });
-
-                    const expectedLevel = Math.floor(dbUser.xp / 500) + 1;
-                    if (expectedLevel > state.level) {
-                        setTimeout(async () => {
-                            await api.student.updateGamification({ level: expectedLevel });
-                            set({
-                                level: expectedLevel,
-                                showLevelUpNotification: { show: true, level: expectedLevel }
-                            });
-                        }, 600);
-                    }
                 } catch (err) {
-                    console.error('Error adding XP:', err);
+                    console.warn('Error adding XP to cloud DB, synced locally:', err);
                 }
             },
             
@@ -393,11 +601,88 @@ export const useStore = create<AppState>()(
             
             rateFlashcard: async (cardId, grade) => {
                 const currentStore = get();
+                const targetCard = currentStore.flashcards.find(c => c.id === cardId);
+                if (!targetCard) return;
+
+                // Sync locally first using standard SM-2 algorithm
+                let repetitions = targetCard.repetitions || 0;
+                let easeFactor = targetCard.easeFactor || 2.5;
+                let interval = targetCard.interval || 0;
+
+                if (grade === 1) {
+                    repetitions = 0;
+                    interval = 0;
+                    easeFactor = Math.max(1.3, easeFactor - 0.2);
+                } else {
+                    repetitions = repetitions + 1;
+                    if (repetitions === 1) {
+                        interval = 1;
+                    } else if (repetitions === 2) {
+                        interval = 3;
+                    } else {
+                        interval = Math.round(interval * easeFactor);
+                    }
+                    const q = grade + 1; 
+                    easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+                }
+
+                const nextDueOffset = grade === 1 ? 10 * 60 * 1000 : interval * 24 * 60 * 60 * 1000;
+                const nextReviewDue = currentStore.simulatedTime + nextDueOffset;
+
+                // Update flat flashcards array in state
+                const updatedCards = currentStore.flashcards.map(c => 
+                    c.id === cardId 
+                        ? { ...c, repetitions, easeFactor, interval, nextReviewDue, lastGrade: grade } 
+                        : c
+                );
+
+                // Update inside courses state as well
+                const updatedCourses = currentStore.courses.map(course => ({
+                    ...course,
+                    flashcards: course.flashcards.map(fc => 
+                        fc.id === cardId 
+                            ? { ...fc, repetitions, easeFactor, interval, nextReviewDue, lastGrade: grade }
+                            : fc
+                    )
+                }));
+
+                set({ 
+                    flashcards: updatedCards,
+                    courses: updatedCourses
+                });
+
+                // Trigger Local Gamification updates
+                const xpToAdd = 15;
+                set((prev) => ({ xp: prev.xp + xpToAdd, showXPNotification: { show: true, amount: xpToAdd } }));
+
+                let badgeToUnlock: any = null;
+                const hasLeitnerPro = currentStore.badges.some(b => typeof b === 'string' ? b === 'leitner_pro' : b.key === 'leitner_pro');
+                if (currentStore.badges.length < 5 && !hasLeitnerPro) {
+                    badgeToUnlock = {
+                        key: 'leitner_pro',
+                        name: 'محترف التكرار',
+                        description: 'راجعت 5 بطاقات استذكار تعليمية'
+                    };
+                    setTimeout(() => {
+                        set((prev) => ({ 
+                            badges: [...prev.badges, { key: 'leitner_pro', name: 'محترف التكرار', description: 'راجعت 5 بطاقات استذكار تعليمية' }],
+                            showBadgeNotification: { show: true, badgeKey: 'leitner_pro' } 
+                        }));
+                    }, 1000);
+                }
+
+                // If offline mode is active, stop here
+                if (currentStore.isOfflineMode) {
+                    return;
+                }
+
                 try {
+                    // Send rating to backend database
                     const res = await api.student.rateFlashcard(parseInt(cardId), grade);
                     const savedProgress = res.data;
                     
-                    const updatedCards = currentStore.flashcards.map(c => 
+                    // Sync backend SM-2 progress metrics
+                    const finalCards = get().flashcards.map(c => 
                         c.id === cardId 
                             ? { 
                                 ...c, 
@@ -405,12 +690,11 @@ export const useStore = create<AppState>()(
                                 easeFactor: savedProgress.easeFactor, 
                                 interval: savedProgress.interval, 
                                 nextReviewDue: savedProgress.nextReviewDue,
-                                lastGrade: grade 
                               } 
                             : c
                     );
-
-                    const updatedCourses = currentStore.courses.map(course => ({
+                    
+                    const finalCourses = get().courses.map(course => ({
                         ...course,
                         flashcards: course.flashcards.map(fc => 
                             fc.id === cardId 
@@ -420,28 +704,17 @@ export const useStore = create<AppState>()(
                                     easeFactor: savedProgress.easeFactor, 
                                     interval: savedProgress.interval, 
                                     nextReviewDue: savedProgress.nextReviewDue,
-                                    lastGrade: grade 
                                   }
                                 : fc
                         )
                     }));
 
                     set({ 
-                        flashcards: updatedCards,
-                        courses: updatedCourses
+                        flashcards: finalCards,
+                        courses: finalCourses
                     });
 
-                    const xpToAdd = 15;
-                    
-                    let badgeToUnlock: any = null;
-                    if (currentStore.badges.length < 5 && !currentStore.badges.includes('leitner_pro')) {
-                        badgeToUnlock = {
-                            key: 'leitner_pro',
-                            name: 'محترف التكرار',
-                            description: 'راجعت 5 بطاقات استذكار تعليمية'
-                        };
-                    }
-
+                    // Sync gamification on backend database
                     const gamificationRes = await api.student.updateGamification({
                         xpToAdd,
                         badge: badgeToUnlock || undefined
@@ -452,32 +725,14 @@ export const useStore = create<AppState>()(
                         xp: dbUser.xp,
                         level: dbUser.level,
                         badges: dbUser.badges || [],
-                        showXPNotification: { show: true, amount: xpToAdd }
                     });
 
-                    const expectedLevel = Math.floor(dbUser.xp / 500) + 1;
-                    if (expectedLevel > currentStore.level) {
-                        setTimeout(async () => {
-                            await api.student.updateGamification({ level: expectedLevel });
-                            set({
-                                level: expectedLevel,
-                                showLevelUpNotification: { show: true, level: expectedLevel }
-                            });
-                        }, 600);
-                    }
-
-                    if (badgeToUnlock) {
-                        setTimeout(() => {
-                            set({ showBadgeNotification: { show: true, badgeKey: 'leitner_pro' } });
-                        }, 1000);
-                    }
                 } catch (err) {
-                    console.error('Error rating flashcard:', err);
+                    console.warn('API rate flashcard failed, retained local calculations.', err);
                 }
             },
 
             addFlashcard: (courseId, question, answer) => set((state) => {
-                // Keep local-only adding for student-created cards as a fallback
                 const newCard: Flashcard = {
                     id: `fc-user-${Date.now()}`,
                     courseId,
@@ -502,7 +757,6 @@ export const useStore = create<AppState>()(
             name: 'lms-storage-bilingual',
             onRehydrateStorage: () => (state) => {
                 if (state) {
-                    // Reapply document settings on rehydration
                     document.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
                     if (state.isDarkMode) {
                         document.documentElement.classList.add('dark');
