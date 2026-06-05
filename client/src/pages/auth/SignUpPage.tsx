@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Github, Mail, ArrowRight, BookOpen } from 'lucide-react';
+import { Github, Mail, ArrowRight, BookOpen, User, GraduationCap } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
+import { cn } from '../../lib/utils';
 
 export default function SignUpPage() {
     const navigate = useNavigate();
-    const { register, lang, toggleLanguage } = useStore();
+    const { register, lang, toggleLanguage, approvedTeachers, loadApprovedTeachers } = useStore();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
@@ -16,8 +17,21 @@ export default function SignUpPage() {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState<'student' | 'teacher'>('student');
+    const [assignedTeacherId, setAssignedTeacherId] = useState<number | null>(null);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        loadApprovedTeachers();
+    }, [loadApprovedTeachers]);
+
+    useEffect(() => {
+        // Set default teacher if list is loaded and user is student
+        if (approvedTeachers && approvedTeachers.length > 0) {
+            setAssignedTeacherId(approvedTeachers[0].id);
+        }
+    }, [approvedTeachers]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,8 +50,21 @@ export default function SignUpPage() {
         setIsLoading(true);
 
         try {
-            await register(`${firstName} ${lastName}`, email, password);
-            navigate('/dashboard');
+            await register(
+                `${firstName} ${lastName}`,
+                email,
+                password,
+                role,
+                role === 'student' ? assignedTeacherId : null
+            );
+            
+            // Get latest store state for approval redirection
+            const latestUser = useStore.getState().user;
+            if (role === 'teacher' && !latestUser.isApproved) {
+                navigate('/auth/pending');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             console.error('Registration error:', err);
             setError(lang === 'ar' ? 'فشل إنشاء الحساب: البريد الإلكتروني مستخدم بالفعل' : 'Registration failed: Email already in use');
@@ -149,6 +176,69 @@ export default function SignUpPage() {
                             required
                         />
                     </div>
+
+                    {/* Role Selection Toggle */}
+                    <div className="space-y-1.5 text-right">
+                        <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                            {lang === 'ar' ? 'نوع الحساب' : 'Account Type'}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 p-1 bg-gray-150 dark:bg-gray-800 rounded-xl border border-gray-200/50 dark:border-gray-700/55">
+                            <button
+                                type="button"
+                                onClick={() => setRole('student')}
+                                className={cn(
+                                    "flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all active:scale-[0.97]",
+                                    role === 'student'
+                                        ? "bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm border border-emerald-100/55 dark:border-emerald-900/30"
+                                        : "text-gray-500 dark:text-gray-400 hover:text-gray-705 dark:hover:text-gray-300"
+                                )}
+                            >
+                                <GraduationCap className="w-4 h-4" />
+                                <span>{lang === 'ar' ? 'طالب' : 'Student'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRole('teacher')}
+                                className={cn(
+                                    "flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all active:scale-[0.97]",
+                                    role === 'teacher'
+                                        ? "bg-white dark:bg-gray-700 text-amber-700 dark:text-amber-300 shadow-sm border border-amber-100/55 dark:border-amber-900/30"
+                                        : "text-gray-500 dark:text-gray-400 hover:text-gray-705 dark:hover:text-gray-300"
+                                )}
+                            >
+                                <User className="w-4 h-4" />
+                                <span>{lang === 'ar' ? 'معلم' : 'Teacher'}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Supervising Teacher Selection Dropdown (Only for Students) */}
+                    {role === 'student' && (
+                        <div className="space-y-1.5 text-right dir-rtl">
+                            <label htmlFor="assignedTeacher" className="text-xs font-bold text-gray-700 dark:text-gray-300 block">
+                                {lang === 'ar' ? 'اختر المعلم المشرف' : 'Select Classroom Teacher'}
+                            </label>
+                            <select
+                                id="assignedTeacher"
+                                value={assignedTeacherId || ''}
+                                onChange={(e) => setAssignedTeacherId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                                className="w-full h-10 px-3 text-xs rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-250 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 hover:border-emerald-350 dark:hover:border-emerald-750/30 font-bold transition-all shadow-sm outline-none"
+                                required={role === 'student'}
+                            >
+                                {approvedTeachers && approvedTeachers.length > 0 ? (
+                                    approvedTeachers.map((t) => (
+                                        <option key={t.id} value={t.id}>
+                                            {t.name} ({t.email})
+                                        </option>
+                                    ))
+                                ) : (
+                                    <option value="">
+                                        {lang === 'ar' ? 'المعلم الافتراضي (بيت الحكمة)' : 'Default Master Teacher'}
+                                    </option>
+                                )}
+                            </select>
+                        </div>
+                    )}
 
                     <Input
                         id="email"

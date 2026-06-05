@@ -5,13 +5,28 @@ import bcrypt from 'bcrypt';
 async function main() {
     console.log('Seeding database...');
 
-    // 1. Create a Teacher User
+    // 1. Create an Admin User
+    const adminPasswordHash = await bcrypt.hash('admin123', 10);
+    const insertedAdmins = await db.insert(users).values({
+        name: 'مدير بيت الحكمة (Admin)',
+        email: 'admin@houseofwisdom.com',
+        password: adminPasswordHash,
+        role: 'admin',
+        isApproved: true,
+        xp: 1000,
+        level: 10,
+        badges: []
+    }).returning({ id: users.id });
+    console.log(`Created admin with ID: ${insertedAdmins[0].id}`);
+
+    // 2. Create a Teacher User
     const teacherPasswordHash = await bcrypt.hash('teacher123', 10);
     const insertedTeachers = await db.insert(users).values({
         name: 'بيت الحكمة (المنشئ)',
         email: 'teacher@houseofwisdom.com',
         password: teacherPasswordHash,
         role: 'teacher',
+        isApproved: true,
         xp: 500,
         level: 5,
         badges: [

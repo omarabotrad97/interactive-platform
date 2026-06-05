@@ -30,6 +30,9 @@ export const requireRole = (roles: string[]) => {
         if (!roles.includes(req.user.role)) {
             return res.sendStatus(403);
         }
+        if (!req.user.isApproved) {
+            return res.status(403).json({ message: 'Account pending approval.' });
+        }
         next();
     };
 };

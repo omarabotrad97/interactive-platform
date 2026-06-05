@@ -8,6 +8,9 @@ interface User {
     email: string;
     bio: string;
     role?: 'admin' | 'teacher' | 'student';
+    isApproved?: boolean;
+    assignedTeacherId?: number | null;
+    assignedTeacher?: { id: number; name: string; email: string } | null;
 }
 
 export interface Badge {
@@ -70,7 +73,7 @@ interface AppState {
     user: User;
     updateUser: (user: Partial<User>) => void;
     checkAuth: () => Promise<void>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    register: (name: string, email: string, password: string, role?: 'student' | 'teacher' | 'admin', assignedTeacherId?: number | null) => Promise<void>;
 
     // Courses & Lessons Completion
     courses: Course[];
@@ -136,6 +139,14 @@ interface AppState {
     updateLessonAction: (lessonId: string, lessonData: { title: string; content?: string; videoUrl?: string; order: number }) => Promise<any>;
     deleteLessonAction: (lessonId: string) => Promise<void>;
     saveQuizAction: (lessonId: string, quizData: { title: string; questions: Array<{ text: string; options: string[]; correctAnswer: number }> }) => Promise<any>;
+
+    // Approved & Pending Teachers state and actions
+    approvedTeachers: Array<{ id: number; name: string; email: string }>;
+    loadApprovedTeachers: () => Promise<void>;
+    pendingTeachers: Array<{ id: number; name: string; email: string; isApproved: boolean; createdAt?: string }>;
+    loadPendingTeachers: () => Promise<void>;
+    approveTeacherAction: (id: number) => Promise<void>;
+    rejectTeacherAction: (id: number) => Promise<void>;
 }
 
 // Resilient Fallback Mock Data
@@ -316,6 +327,9 @@ export const useStore = create<AppState>()(
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
                             role: dbUser.role,
+                            isApproved: dbUser.isApproved,
+                            assignedTeacherId: dbUser.assignedTeacherId,
+                            assignedTeacher: dbUser.assignedTeacher,
                             bio: 'متصل بقاعدة البيانات السحابية.',
                         }
                     });
@@ -354,6 +368,9 @@ export const useStore = create<AppState>()(
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
                             role: dbUser.role,
+                            isApproved: dbUser.isApproved,
+                            assignedTeacherId: dbUser.assignedTeacherId,
+                            assignedTeacher: dbUser.assignedTeacher,
                             bio: 'متصل بقاعدة بيانات بيت الحكمة السحابية.',
                         }
                     });
@@ -370,10 +387,12 @@ export const useStore = create<AppState>()(
                         badges: [{ key: 'first_step', name: 'الخطوة الأولى', description: 'أكملت أول درس لك بنجاح' }],
                         completedLessons: [],
                         user: {
-                            firstName: 'بيت الحكمة',
+                            firstName: finalEmail.split('@')[0] === 'admin' ? 'مدير بيت الحكمة' : 'بيت الحكمة',
                             lastName: '(محاكاة محليّة)',
                             email: finalEmail,
-                            role: finalEmail === 'teacher@houseofwisdom.com' ? 'teacher' : 'student',
+                            role: finalEmail === 'admin@houseofwisdom.com' ? 'admin' : (finalEmail === 'teacher@houseofwisdom.com' ? 'teacher' : 'student'),
+                            isApproved: finalEmail !== 'teacher@houseofwisdom.com', // simulating pending teacher
+                            assignedTeacherId: null,
                             bio: 'وضع المحاكاة النشط. السيرفر الخلفي مغلق حالياً، ويتم حفظ بياناتك محلياً في المتصفح.',
                         },
                         courses: fallbackCourses,
@@ -382,9 +401,9 @@ export const useStore = create<AppState>()(
                 }
             },
 
-            register: async (name, email, password) => {
+            register: async (name, email, password, role = 'student', assignedTeacherId = null) => {
                 try {
-                    const res = await api.auth.register({ name, email, password });
+                    const res = await api.auth.register({ name, email, password, role, assignedTeacherId });
                     const { user: dbUser, token } = res.data;
                     
                     localStorage.setItem('token', token);
@@ -400,6 +419,9 @@ export const useStore = create<AppState>()(
                             lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
                             email: dbUser.email,
                             role: dbUser.role,
+                            isApproved: dbUser.isApproved,
+                            assignedTeacherId: dbUser.assignedTeacherId,
+                            assignedTeacher: dbUser.assignedTeacher,
                             bio: 'حساب مسجل سحابياً بنجاح.',
                         }
                     });
@@ -417,7 +439,9 @@ export const useStore = create<AppState>()(
                             firstName: name.split(' ')[0] || name,
                             lastName: name.split(' ').slice(1).join(' ') || '(محاكاة)',
                             email: email,
-                            role: email === 'teacher@houseofwisdom.com' ? 'teacher' : 'student',
+                            role: role,
+                            isApproved: role !== 'teacher', // simulating pending teacher
+                            assignedTeacherId: assignedTeacherId,
                             bio: 'حساب محاكاة محلي. السيرفر الخلفي غير متاح حالياً.',
                         },
                         courses: fallbackCourses,
@@ -436,7 +460,7 @@ export const useStore = create<AppState>()(
                     badges: [],
                     completedLessons: [],
                     notes: {},
-                    user: { firstName: '', lastName: '', email: '', bio: '', role: undefined },
+                    user: { firstName: '', lastName: '', email: '', bio: '', role: undefined, isApproved: undefined, assignedTeacherId: undefined },
                     courses: [],
                     flashcards: []
                 });
@@ -997,7 +1021,94 @@ export const useStore = create<AppState>()(
             activeGuideStep: 1,
             openGuide: () => set({ isGuideOpen: true, activeGuideStep: 1 }),
             closeGuide: () => set({ isGuideOpen: false }),
-            setGuideStep: (step) => set({ activeGuideStep: step })
+            setGuideStep: (step) => set({ activeGuideStep: step }),
+
+            // Approved & Pending Teachers state and actions
+            approvedTeachers: [],
+            pendingTeachers: [],
+
+            loadApprovedTeachers: async () => {
+                if (get().isOfflineMode) {
+                    set({
+                        approvedTeachers: [
+                            { id: 1, name: 'بيت الحكمة (المنشئ)', email: 'teacher@houseofwisdom.com' }
+                        ]
+                    });
+                    return;
+                }
+                try {
+                    const res = await api.auth.getApprovedTeachers();
+                    set({ approvedTeachers: res.data });
+                } catch (err) {
+                    console.error('Error loading approved teachers:', err);
+                    set({
+                        approvedTeachers: [
+                            { id: 1, name: 'بيت الحكمة (المنشئ)', email: 'teacher@houseofwisdom.com' }
+                        ]
+                    });
+                }
+            },
+
+            loadPendingTeachers: async () => {
+                if (get().isOfflineMode) {
+                    if (get().pendingTeachers.length === 0) {
+                        set({
+                            pendingTeachers: [
+                                { id: 101, name: 'أ. سارة أحمد', email: 'sara@houseofwisdom.com', isApproved: false, createdAt: new Date().toISOString() }
+                            ]
+                        });
+                    }
+                    return;
+                }
+                try {
+                    const res = await api.admin.getPendingTeachers();
+                    set({ pendingTeachers: res.data });
+                } catch (err) {
+                    console.error('Error loading pending teachers:', err);
+                    set({
+                        pendingTeachers: [
+                            { id: 101, name: 'أ. سارة أحمد', email: 'sara@houseofwisdom.com', isApproved: false, createdAt: new Date().toISOString() }
+                        ]
+                    });
+                }
+            },
+
+            approveTeacherAction: async (id) => {
+                if (get().isOfflineMode) {
+                    const target = get().pendingTeachers.find(t => t.id === id);
+                    if (target) {
+                        set(state => ({
+                            pendingTeachers: state.pendingTeachers.filter(t => t.id !== id),
+                            approvedTeachers: [...state.approvedTeachers, { id: target.id, name: target.name, email: target.email }]
+                        }));
+                    }
+                    return;
+                }
+                try {
+                    await api.admin.approveTeacher(id);
+                    await get().loadPendingTeachers();
+                    await get().loadApprovedTeachers();
+                } catch (err) {
+                    console.error('Error approving teacher:', err);
+                    throw err;
+                }
+            },
+
+            rejectTeacherAction: async (id) => {
+                if (get().isOfflineMode) {
+                    set(state => ({
+                        pendingTeachers: state.pendingTeachers.filter(t => t.id !== id)
+                    }));
+                    return;
+                }
+                try {
+                    await api.admin.rejectTeacher(id);
+                    await get().loadPendingTeachers();
+                } catch (err) {
+                    console.error('Error rejecting teacher:', err);
+                    throw err;
+                }
+            }
         }),
         {
             name: 'lms-storage-bilingual',

@@ -22,6 +22,13 @@ export const auth = {
     register: (userData: any) => api.post('/auth/register', userData),
     login: (credentials: any) => api.post('/auth/login', credentials),
     getProfile: () => api.get('/auth/me'),
+    getApprovedTeachers: () => api.get('/auth/teachers'),
+};
+
+export const admin = {
+    getPendingTeachers: () => api.get('/admin/pending-teachers'),
+    approveTeacher: (id: number) => api.post(`/admin/approve-teacher/${id}`),
+    rejectTeacher: (id: number) => api.post(`/admin/reject-teacher/${id}`),
 };
 
 export const courses = {

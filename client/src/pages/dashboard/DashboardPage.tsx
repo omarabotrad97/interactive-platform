@@ -200,6 +200,37 @@ export default function DashboardPage() {
                 })}
             </div>
 
+            {/* Supervising Teacher Card */}
+            {user.role === 'student' && (
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/15 dark:to-teal-950/15 border border-emerald-100 dark:border-emerald-900/30 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row items-center sm:justify-between gap-4 transition-all duration-200">
+                    <div className="flex items-center gap-4 text-right dir-rtl">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-amber-950 flex items-center justify-center font-black text-xl shadow-lg border border-amber-200/50">
+                            {user.assignedTeacher?.name ? user.assignedTeacher.name.charAt(0) : 'م'}
+                        </div>
+                        <div className="space-y-1">
+                            <span className="text-[10px] uppercase font-black text-amber-700 dark:text-amber-400 tracking-wider">
+                                {lang === 'ar' ? 'معلم الصف الخاص بك' : 'Your Classroom Teacher'}
+                            </span>
+                            <h3 className="text-base font-extrabold text-gray-900 dark:text-white">
+                                {user.assignedTeacher?.name || (lang === 'ar' ? 'بيت الحكمة (المنشئ)' : 'House of Wisdom (Default)')}
+                            </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {user.assignedTeacher?.email || 'teacher@houseofwisdom.com'}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="text-center sm:text-left dir-rtl">
+                        <p className="text-xs text-emerald-800 dark:text-emerald-305 font-bold bg-emerald-100/40 dark:bg-emerald-900/20 px-4 py-2 rounded-2xl max-w-sm leading-relaxed">
+                            {lang === 'ar' 
+                                ? '« أهلاً بك في صفي! سنقوم قريباً بتفعيل الفعاليات والنشاطات الجماعية داخل الصف لمتابعة تقدّمك. »' 
+                                : '“Welcome to my class! Soon we will enable interactive group activities inside this classroom to monitor your growth.”'
+                            }
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Achievements & Leaderboard Split */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Unlocked Badges Panel */}

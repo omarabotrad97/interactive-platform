@@ -12,6 +12,8 @@ export const users = pgTable('users', {
     email: text('email').notNull().unique(),
     password: text('password').notNull(),
     role: roleEnum('role').default('student'),
+    isApproved: boolean('is_approved').default(true).notNull(), // True for students/admins, false for teachers until approved
+    assignedTeacherId: integer('assigned_teacher_id').references((): any => users.id), // Reference to the assigned teacher user
     xp: integer('xp').default(0).notNull(),
     level: integer('level').default(1).notNull(),
     badges: jsonb('badges').default([]).notNull(), // List of unlocked badges [{key, name, description}]

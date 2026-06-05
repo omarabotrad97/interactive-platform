@@ -22,6 +22,11 @@ import CoursePlayerPage from './pages/dashboard/CoursePlayerPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 
+// Admin & Pending layouts and pages
+import PendingApprovalPage from './pages/auth/PendingApprovalPage';
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+
 export const router = createBrowserRouter([
     {
         path: '/',
@@ -47,6 +52,10 @@ export const router = createBrowserRouter([
             {
                 element: <ProtectedRoute />,
                 children: [
+                    {
+                        path: 'auth/pending',
+                        element: <PendingApprovalPage />
+                    },
                     {
                         path: 'dashboard',
                         element: <DashboardLayout />,
@@ -76,7 +85,7 @@ export const router = createBrowserRouter([
                 ]
             },
             {
-                element: <RoleProtectedRoute allowedRoles={['teacher', 'admin']} />,
+                element: <RoleProtectedRoute allowedRoles={['teacher']} />,
                 children: [
                     {
                         path: 'teacher',
@@ -98,6 +107,21 @@ export const router = createBrowserRouter([
                                 path: 'students',
                                 element: <TeacherStudentStatsPage />,
                             },
+                        ]
+                    }
+                ]
+            },
+            {
+                element: <RoleProtectedRoute allowedRoles={['admin']} />,
+                children: [
+                    {
+                        path: 'admin',
+                        element: <AdminLayout />,
+                        children: [
+                            {
+                                index: true,
+                                element: <AdminDashboardPage />
+                            }
                         ]
                     }
                 ]

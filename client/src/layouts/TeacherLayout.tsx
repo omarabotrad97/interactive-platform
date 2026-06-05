@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Home, LayoutDashboard, LogOut, Menu, UserCheck, X, Languages, GraduationCap } from 'lucide-react';
+import { BookOpen, Home, LayoutDashboard, LogOut, Menu, UserCheck, X, Languages, GraduationCap, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
@@ -115,6 +115,19 @@ export default function TeacherLayout() {
                         {lang === 'ar' ? 'بوابة التعلم (طالب)' : 'Learning Portal (Student)'}
                     </Link>
                 </div>
+
+                {/* Link Back to Admin Panel for Admin Role */}
+                {user.role === 'admin' && (
+                    <div className="px-4 py-2 border-t border-emerald-50 dark:border-emerald-950/20">
+                        <Link
+                            to="/admin"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all"
+                        >
+                            <Shield className="w-4 h-4" />
+                            {lang === 'ar' ? 'بوابة الإدارة' : 'Admin Panel'}
+                        </Link>
+                    </div>
+                )}
 
                 {/* Sign Out Button Footer */}
                 <div className="p-4 border-t border-emerald-50 dark:border-emerald-950/20">

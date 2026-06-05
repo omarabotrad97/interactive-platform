@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { db } from '../db';
 import { users } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 // Validators
@@ -11,6 +11,8 @@ const registerSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
     password: z.string().min(6),
+    role: z.enum(['student', 'teacher', 'admin']).optional().default('student'),
+    assignedTeacherId: z.number().int().optional().nullable(),
 });
 
 const loginSchema = z.object({
@@ -20,7 +22,7 @@ const loginSchema = z.object({
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { name, email, password } = registerSchema.parse(req.body);
+        const { name, email, password, role, assignedTeacherId } = registerSchema.parse(req.body);
 
         // Check if user exists
         const existingUser = await db.select().from(users).where(eq(users.email, email));
@@ -31,16 +33,24 @@ export const register = async (req: Request, res: Response) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Teachers require admin approval, students/admins are approved immediately
+        const isApproved = role !== 'teacher';
+
         // Create user
         const newUser = await db.insert(users).values({
             name,
             email,
             password: hashedPassword,
+            role,
+            isApproved,
+            assignedTeacherId: role === 'student' ? assignedTeacherId : null,
         }).returning({ 
             id: users.id, 
             name: users.name, 
             email: users.email, 
             role: users.role,
+            isApproved: users.isApproved,
+            assignedTeacherId: users.assignedTeacherId,
             xp: users.xp,
             level: users.level,
             badges: users.badges,
@@ -50,7 +60,7 @@ export const register = async (req: Request, res: Response) => {
         const user = newUser[0];
 
         // Generate token
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+        const token = jwt.sign({ id: user.id, role: user.role, isApproved: user.isApproved }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
 
         res.status(201).json({ user, token });
     } catch (error) {
@@ -80,7 +90,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         // Generate token
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+        const token = jwt.sign({ id: user.id, role: user.role, isApproved: user.isApproved }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
 
         res.json({
             user: {
@@ -88,6 +98,8 @@ export const login = async (req: Request, res: Response) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                isApproved: user.isApproved,
+                assignedTeacherId: user.assignedTeacherId,
                 xp: user.xp,
                 level: user.level,
                 badges: user.badges,
@@ -114,11 +126,29 @@ export const getProfile = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        let assignedTeacher = null;
+        if (user.assignedTeacherId) {
+            const teacherResult = await db.select({
+                id: users.id,
+                name: users.name,
+                email: users.email
+            })
+            .from(users)
+            .where(eq(users.id, user.assignedTeacherId));
+            
+            if (teacherResult.length > 0) {
+                assignedTeacher = teacherResult[0];
+            }
+        }
+
         res.json({
             id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
+            isApproved: user.isApproved,
+            assignedTeacherId: user.assignedTeacherId,
+            assignedTeacher,
             xp: user.xp,
             level: user.level,
             badges: user.badges,
@@ -126,6 +156,27 @@ export const getProfile = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const getApprovedTeachers = async (req: Request, res: Response) => {
+    try {
+        const teachersList = await db.select({
+            id: users.id,
+            name: users.name,
+            email: users.email
+        })
+        .from(users)
+        .where(
+            and(
+                eq(users.role, 'teacher'),
+                eq(users.isApproved, true)
+            )
+        );
+        res.json(teachersList);
+    } catch (error) {
+        console.error('Error fetching approved teachers:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
