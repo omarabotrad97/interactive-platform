@@ -6,6 +6,7 @@ import { getTranslation } from '../../lib/translations';
 
 export default function Hero() {
     const { lang } = useStore();
+    console.log("Testing Antigravity integration - Hero section loaded successfully!");
 
     return (
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white dark:bg-gray-950 transition-colors duration-200">
