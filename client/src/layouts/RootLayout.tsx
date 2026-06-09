@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { ToastContainer } from '../components/ui';
 
 export default function RootLayout() {
     const { lang, checkAuth } = useStore();
@@ -19,6 +20,8 @@ export default function RootLayout() {
             lang === 'ar' ? 'font-cairo' : 'font-outfit'
         }`}>
             <Outlet />
+            <ToastContainer />
         </div>
     );
 }
+

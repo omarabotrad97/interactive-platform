@@ -13,6 +13,12 @@ interface User {
     assignedTeacher?: { id: number; name: string; email: string } | null;
 }
 
+export interface ToastNotification {
+    id: string;
+    message: string;
+    type: 'success' | 'error' | 'info';
+}
+
 export interface Badge {
     key: string;
     name: string;
@@ -112,8 +118,10 @@ interface AppState {
     closeGuide: () => void;
     setGuideStep: (step: number) => void;
 
-    // Offline / Local Simulation Mode Status
-    isOfflineMode: boolean;
+    // Global Toast Notifications
+    toasts: ToastNotification[];
+    showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+    removeToast: (id: string) => void;
 
     // Teacher & Admin Panel Actions & State
     teacherStats: {
@@ -300,7 +308,20 @@ export const useStore = create<AppState>()(
 
             // Authentication
             isAuthenticated: false,
-            isOfflineMode: false,
+            toasts: [],
+            showToast: (message, type = 'info') => {
+                const id = Math.random().toString(36).substring(2, 9);
+                set((state) => ({
+                    toasts: [...state.toasts, { id, message, type }]
+                }));
+                setTimeout(() => {
+                    get().removeToast(id);
+                }, 4000);
+            },
+            removeToast: (id) => set((state) => ({
+                toasts: state.toasts.filter(t => t.id !== id)
+            })),
+
             user: {
                 firstName: '',
                 lastName: '',
@@ -317,7 +338,6 @@ export const useStore = create<AppState>()(
                     const dbUser = res.data;
                     set({
                         isAuthenticated: true,
-                        isOfflineMode: false,
                         xp: dbUser.xp,
                         level: dbUser.level,
                         badges: dbUser.badges || [],
@@ -335,15 +355,9 @@ export const useStore = create<AppState>()(
                     });
                     await get().loadCourses();
                 } catch (err) {
-                    console.warn('API getProfile failed. Switching to offline simulation check.', err);
-                    // Localstorage fallback check (preserves session even if backend offline)
-                    const state = get();
-                    if (state.isAuthenticated && state.isOfflineMode) {
-                        // Maintain existing simulated session
-                        return;
-                    }
+                    console.warn('API getProfile failed. Clearing session.', err);
                     localStorage.removeItem('token');
-                    set({ isAuthenticated: false });
+                    set({ isAuthenticated: false, user: { firstName: '', lastName: '', email: '', bio: '' } });
                 }
             },
 
@@ -358,7 +372,6 @@ export const useStore = create<AppState>()(
                     localStorage.setItem('token', token);
                     set({
                         isAuthenticated: true,
-                        isOfflineMode: false,
                         xp: dbUser.xp,
                         level: dbUser.level,
                         badges: dbUser.badges || [],
@@ -375,29 +388,11 @@ export const useStore = create<AppState>()(
                         }
                     });
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم تسجيل الدخول بنجاح!' : 'Logged in successfully!', 'success');
                 } catch (err) {
-                    console.warn('API login failed. Falling back to local offline simulation mode:', err);
-                    
-                    // Fallback to offline prototype simulation
-                    set({
-                        isAuthenticated: true,
-                        isOfflineMode: true,
-                        xp: 250,
-                        level: 1,
-                        badges: [{ key: 'first_step', name: 'الخطوة الأولى', description: 'أكملت أول درس لك بنجاح' }],
-                        completedLessons: [],
-                        user: {
-                            firstName: finalEmail.split('@')[0] === 'admin' ? 'مدير بيت الحكمة' : 'بيت الحكمة',
-                            lastName: '(محاكاة محليّة)',
-                            email: finalEmail,
-                            role: finalEmail === 'admin@houseofwisdom.com' ? 'admin' : (finalEmail === 'teacher@houseofwisdom.com' ? 'teacher' : 'student'),
-                            isApproved: finalEmail !== 'teacher@houseofwisdom.com', // simulating pending teacher
-                            assignedTeacherId: null,
-                            bio: 'وضع المحاكاة النشط. السيرفر الخلفي مغلق حالياً، ويتم حفظ بياناتك محلياً في المتصفح.',
-                        },
-                        courses: fallbackCourses,
-                        flashcards: fallbackFlashcards
-                    });
+                    console.error('API login failed:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل تسجيل الدخول: البريد الإلكتروني أو كلمة المرور غير صحيحة أو السيرفر غير متصل' : 'Login failed: Invalid credentials or server is offline', 'error');
+                    throw err;
                 }
             },
 
@@ -409,7 +404,6 @@ export const useStore = create<AppState>()(
                     localStorage.setItem('token', token);
                     set({
                         isAuthenticated: true,
-                        isOfflineMode: false,
                         xp: dbUser.xp,
                         level: dbUser.level,
                         badges: dbUser.badges || [],
@@ -426,27 +420,11 @@ export const useStore = create<AppState>()(
                         }
                     });
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم إنشاء الحساب بنجاح!' : 'Account created successfully!', 'success');
                 } catch (err) {
-                    console.warn('API registration failed. Falling back to local offline simulation mode:', err);
-                    set({
-                        isAuthenticated: true,
-                        isOfflineMode: true,
-                        xp: 0,
-                        level: 1,
-                        badges: [],
-                        completedLessons: [],
-                        user: {
-                            firstName: name.split(' ')[0] || name,
-                            lastName: name.split(' ').slice(1).join(' ') || '(محاكاة)',
-                            email: email,
-                            role: role,
-                            isApproved: role !== 'teacher', // simulating pending teacher
-                            assignedTeacherId: assignedTeacherId,
-                            bio: 'حساب محاكاة محلي. السيرفر الخلفي غير متاح حالياً.',
-                        },
-                        courses: fallbackCourses,
-                        flashcards: fallbackFlashcards
-                    });
+                    console.error('API registration failed:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل إنشاء الحساب: البريد الإلكتروني مستخدم بالفعل أو السيرفر غير متصل' : 'Registration failed: Email already in use or server is offline', 'error');
+                    throw err;
                 }
             },
 
@@ -454,16 +432,16 @@ export const useStore = create<AppState>()(
                 localStorage.removeItem('token');
                 set({
                     isAuthenticated: false,
-                    isOfflineMode: false,
                     xp: 0,
                     level: 1,
                     badges: [],
                     completedLessons: [],
                     notes: {},
-                    user: { firstName: '', lastName: '', email: '', bio: '', role: undefined, isApproved: undefined, assignedTeacherId: undefined },
+                    user: { firstName: '', lastName: '', email: '', bio: '', role: undefined, isApproved: undefined, assignedTeacherId: undefined, assignedTeacher: undefined },
                     courses: [],
                     flashcards: []
                 });
+                get().showToast(get().lang === 'ar' ? 'تم تسجيل الخروج بنجاح' : 'Logged out successfully', 'info');
             },
 
             // Courses
@@ -471,10 +449,6 @@ export const useStore = create<AppState>()(
             completedLessons: [],
             
             loadCourses: async () => {
-                if (get().isOfflineMode) {
-                    // Maintain fallback mock data in offline mode
-                    return;
-                }
                 try {
                     const res = await api.courses.getAll();
                     const fetchedCourses = res.data;
@@ -561,10 +535,6 @@ export const useStore = create<AppState>()(
                     }, 800);
                 }
 
-                if (state.isOfflineMode) {
-                    return; // Done locally
-                }
-
                 try {
                     const res = await api.student.updateGamification({
                         xpToAdd,
@@ -579,23 +549,20 @@ export const useStore = create<AppState>()(
                         badges: dbUser.badges || [],
                     });
                 } catch (err) {
-                    console.warn('API error toggling completion, remaining in offline fallback state.', err);
+                    console.warn('API error toggling completion:', err);
                 }
             },
 
             // Notes
             notes: {},
             loadNoteForLesson: async (lessonId) => {
-                if (get().isOfflineMode) {
-                    return;
-                }
                 try {
                     const res = await api.student.getNote(lessonId);
                     set((state) => ({
                         notes: { ...state.notes, [lessonId]: res.data.content }
                     }));
                 } catch (err) {
-                    console.warn('Error loading note dynamically, using offline memory:', err);
+                    console.warn('Error loading note dynamically:', err);
                 }
             },
             saveNote: async (lessonId, content) => {
@@ -603,14 +570,10 @@ export const useStore = create<AppState>()(
                     notes: { ...state.notes, [lessonId]: content }
                 }));
 
-                if (get().isOfflineMode) {
-                    return;
-                }
-
                 try {
                     await api.student.saveNote(parseInt(lessonId), content);
                 } catch (err) {
-                    console.warn('Error saving note to database, saved locally:', err);
+                    console.warn('Error saving note to database:', err);
                 }
             },
 
@@ -640,10 +603,6 @@ export const useStore = create<AppState>()(
                             showLevelUpNotification: { show: true, level: expectedLevel }
                         });
                     }, 600);
-                }
-
-                if (state.isOfflineMode) {
-                    return;
                 }
 
                 try {
@@ -744,11 +703,6 @@ export const useStore = create<AppState>()(
                     }, 1000);
                 }
 
-                // If offline mode is active, stop here
-                if (currentStore.isOfflineMode) {
-                    return;
-                }
-
                 try {
                     // Send rating to backend database
                     const res = await api.student.rateFlashcard(parseInt(cardId), grade);
@@ -822,28 +776,6 @@ export const useStore = create<AppState>()(
             // Teacher Panel Actions
             teacherStats: null,
             loadTeacherStats: async () => {
-                if (get().isOfflineMode) {
-                    set({
-                        teacherStats: {
-                            totalCourses: get().courses.length,
-                            totalStudents: 1,
-                            averageXp: 450,
-                            students: [
-                                {
-                                    id: 99,
-                                    name: 'أحمد التلميذ',
-                                    email: 'student@example.com',
-                                    xp: 450,
-                                    level: 1,
-                                    badges: [{ key: 'first_step', name: 'الخطوة الأولى', description: 'أكملت أول درس لك بنجاح' }],
-                                    completedLessons: [],
-                                    enrolledCourses: [get().courses[0]?.title?.ar || 'React وتصميم الويب العصري']
-                                }
-                            ]
-                        }
-                    });
-                    return;
-                }
                 try {
                     const res = await api.teacher.getStats();
                     set({ teacherStats: res.data });
@@ -852,22 +784,6 @@ export const useStore = create<AppState>()(
                 }
             },
             createCourseAction: async (courseData) => {
-                if (get().isOfflineMode) {
-                    const parsedTitle = parseBilingualClient(courseData.title);
-                    const parsedDesc = parseBilingualClient(courseData.description);
-                    const newCourse: Course = {
-                        id: `course-${Date.now()}`,
-                        title: parsedTitle,
-                        description: parsedDesc,
-                        thumbnailUrl: courseData.thumbnailUrl || 'https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=800&q=80',
-                        lessons: [],
-                        flashcards: []
-                    };
-                    set(prev => ({
-                        courses: [...prev.courses, newCourse]
-                    }));
-                    return newCourse;
-                }
                 try {
                     const res = await api.courses.create(courseData);
                     await get().loadCourses();
@@ -878,19 +794,6 @@ export const useStore = create<AppState>()(
                 }
             },
             updateCourseAction: async (courseId, courseData) => {
-                if (get().isOfflineMode) {
-                    const parsedTitle = parseBilingualClient(courseData.title);
-                    const parsedDesc = parseBilingualClient(courseData.description);
-                    set(prev => ({
-                        courses: prev.courses.map(c => c.id === courseId ? {
-                            ...c,
-                            title: parsedTitle,
-                            description: parsedDesc,
-                            thumbnailUrl: courseData.thumbnailUrl || c.thumbnailUrl
-                        } : c)
-                    }));
-                    return;
-                }
                 try {
                     const res = await api.courses.update(courseId, courseData);
                     await get().loadCourses();
@@ -901,117 +804,60 @@ export const useStore = create<AppState>()(
                 }
             },
             deleteCourseAction: async (courseId) => {
-                if (get().isOfflineMode) {
-                    set(prev => ({
-                        courses: prev.courses.filter(c => c.id !== courseId)
-                    }));
-                    return;
-                }
                 try {
                     await api.courses.delete(courseId);
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم حذف الدورة بنجاح' : 'Course deleted successfully', 'success');
                 } catch (err) {
                     console.error('Error deleting course:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل حذف الدورة: السيرفر غير متصل' : 'Failed to delete course: Server is offline', 'error');
                     throw err;
                 }
             },
             addLessonAction: async (courseId, lessonData) => {
-                if (get().isOfflineMode) {
-                    const parsedTitle = parseBilingualClient(lessonData.title);
-                    const parsedContent = parseBilingualClient(lessonData.content);
-                    const newLesson: Lesson = {
-                        id: `lesson-${Date.now()}`,
-                        title: parsedTitle,
-                        content: parsedContent,
-                        videoUrl: lessonData.videoUrl || '',
-                        quiz: []
-                    };
-                    set(prev => ({
-                        courses: prev.courses.map(c => c.id === courseId ? {
-                            ...c,
-                            lessons: [...c.lessons, newLesson].sort((a, b) => (a.id > b.id ? 1 : -1))
-                        } : c)
-                    }));
-                    return newLesson;
-                }
                 try {
                     const res = await api.courses.addLesson(courseId, lessonData);
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم إضافة الدرس بنجاح!' : 'Lesson added successfully!', 'success');
                     return res.data;
                 } catch (err) {
                     console.error('Error adding lesson:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل إضافة الدرس: السيرفر غير متصل' : 'Failed to add lesson: Server is offline', 'error');
                     throw err;
                 }
             },
             updateLessonAction: async (lessonId, lessonData) => {
-                if (get().isOfflineMode) {
-                    const parsedTitle = parseBilingualClient(lessonData.title);
-                    const parsedContent = parseBilingualClient(lessonData.content);
-                    set(prev => ({
-                        courses: prev.courses.map(c => ({
-                            ...c,
-                            lessons: c.lessons.map(l => l.id === lessonId ? {
-                                ...l,
-                                title: parsedTitle,
-                                content: parsedContent,
-                                videoUrl: lessonData.videoUrl || l.videoUrl
-                            } : l)
-                        }))
-                    }));
-                    return;
-                }
                 try {
                     const res = await api.courses.updateLesson(lessonId, lessonData);
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم تحديث الدرس بنجاح' : 'Lesson updated successfully', 'success');
                     return res.data;
                 } catch (err) {
                     console.error('Error updating lesson:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل تحديث الدرس: السيرفر غير متصل' : 'Failed to update lesson: Server is offline', 'error');
                     throw err;
                 }
             },
             deleteLessonAction: async (lessonId) => {
-                if (get().isOfflineMode) {
-                    set(prev => ({
-                        courses: prev.courses.map(c => ({
-                            ...c,
-                            lessons: c.lessons.filter(l => l.id !== lessonId)
-                        }))
-                    }));
-                    return;
-                }
                 try {
                     await api.courses.deleteLesson(lessonId);
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم حذف الدرس بنجاح' : 'Lesson deleted successfully', 'success');
                 } catch (err) {
                     console.error('Error deleting lesson:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل حذف الدرس: السيرفر غير متصل' : 'Failed to delete lesson: Server is offline', 'error');
                     throw err;
                 }
             },
             saveQuizAction: async (lessonId, quizData) => {
-                if (get().isOfflineMode) {
-                    const formattedQuiz: QuizQuestion[] = quizData.questions.map((q, idx) => ({
-                        id: `q-${idx}-${Date.now()}`,
-                        text: parseBilingualClient(q.text),
-                        options: { en: q.options, ar: q.options },
-                        correctAnswer: q.correctAnswer
-                    }));
-                    set(prev => ({
-                        courses: prev.courses.map(c => ({
-                            ...c,
-                            lessons: c.lessons.map(l => l.id === lessonId ? {
-                                ...l,
-                                quiz: formattedQuiz
-                            } : l)
-                        }))
-                    }));
-                    return;
-                }
                 try {
                     const res = await api.courses.saveQuiz(lessonId, quizData);
                     await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم حفظ الاختبار بنجاح!' : 'Quiz saved successfully!', 'success');
                     return res.data;
                 } catch (err) {
                     console.error('Error saving quiz:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل حفظ الاختبار: السيرفر غير متصل' : 'Failed to save quiz: Server is offline', 'error');
                     throw err;
                 }
             },
@@ -1028,84 +874,46 @@ export const useStore = create<AppState>()(
             pendingTeachers: [],
 
             loadApprovedTeachers: async () => {
-                if (get().isOfflineMode) {
-                    set({
-                        approvedTeachers: [
-                            { id: 1, name: 'بيت الحكمة (المنشئ)', email: 'teacher@houseofwisdom.com' }
-                        ]
-                    });
-                    return;
-                }
                 try {
                     const res = await api.auth.getApprovedTeachers();
                     set({ approvedTeachers: res.data });
                 } catch (err) {
                     console.error('Error loading approved teachers:', err);
-                    set({
-                        approvedTeachers: [
-                            { id: 1, name: 'بيت الحكمة (المنشئ)', email: 'teacher@houseofwisdom.com' }
-                        ]
-                    });
+                    get().showToast(get().lang === 'ar' ? 'خطأ في تحميل المعلمين المعتمدين' : 'Error loading approved teachers', 'error');
                 }
             },
 
             loadPendingTeachers: async () => {
-                if (get().isOfflineMode) {
-                    if (get().pendingTeachers.length === 0) {
-                        set({
-                            pendingTeachers: [
-                                { id: 101, name: 'أ. سارة أحمد', email: 'sara@houseofwisdom.com', isApproved: false, createdAt: new Date().toISOString() }
-                            ]
-                        });
-                    }
-                    return;
-                }
                 try {
                     const res = await api.admin.getPendingTeachers();
                     set({ pendingTeachers: res.data });
                 } catch (err) {
                     console.error('Error loading pending teachers:', err);
-                    set({
-                        pendingTeachers: [
-                            { id: 101, name: 'أ. سارة أحمد', email: 'sara@houseofwisdom.com', isApproved: false, createdAt: new Date().toISOString() }
-                        ]
-                    });
+                    get().showToast(get().lang === 'ar' ? 'خطأ في تحميل طلبات المعلمين' : 'Error loading pending teachers', 'error');
                 }
             },
 
             approveTeacherAction: async (id) => {
-                if (get().isOfflineMode) {
-                    const target = get().pendingTeachers.find(t => t.id === id);
-                    if (target) {
-                        set(state => ({
-                            pendingTeachers: state.pendingTeachers.filter(t => t.id !== id),
-                            approvedTeachers: [...state.approvedTeachers, { id: target.id, name: target.name, email: target.email }]
-                        }));
-                    }
-                    return;
-                }
                 try {
                     await api.admin.approveTeacher(id);
                     await get().loadPendingTeachers();
                     await get().loadApprovedTeachers();
+                    get().showToast(get().lang === 'ar' ? 'تم الموافقة على المعلم وتفعيل حسابه!' : 'Teacher approved and activated successfully!', 'success');
                 } catch (err) {
                     console.error('Error approving teacher:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل تفعيل المعلم: السيرفر غير متصل' : 'Failed to approve teacher: Server is offline', 'error');
                     throw err;
                 }
             },
 
             rejectTeacherAction: async (id) => {
-                if (get().isOfflineMode) {
-                    set(state => ({
-                        pendingTeachers: state.pendingTeachers.filter(t => t.id !== id)
-                    }));
-                    return;
-                }
                 try {
                     await api.admin.rejectTeacher(id);
                     await get().loadPendingTeachers();
+                    get().showToast(get().lang === 'ar' ? 'تم رفض طلب المعلم بنجاح' : 'Teacher request rejected successfully', 'info');
                 } catch (err) {
                     console.error('Error rejecting teacher:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل رفض المعلم: السيرفر غير متصل' : 'Failed to reject teacher: Server is offline', 'error');
                     throw err;
                 }
             }
