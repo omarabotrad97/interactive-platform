@@ -9,6 +9,13 @@ import { ensureBilingual, ensureBilingualOptions } from '../../lib/bilingual';
 import PomodoroTimer from '../../components/interactive/PomodoroTimer';
 import FlashcardStudy from '../../components/interactive/FlashcardStudy';
 
+function getYouTubeId(url: string | undefined): string | null {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
 export default function CoursePlayerPage() {
     const { courseId } = useParams<{ courseId: string }>();
     const { 
@@ -219,15 +226,27 @@ export default function CoursePlayerPage() {
                 <div className="xl:col-span-2 space-y-6">
                     {/* Interactive Video Player */}
                     <div className="aspect-video bg-black rounded-2xl overflow-hidden relative group shadow-lg border border-gray-800 flex items-center justify-center">
-                        <video 
-                            src={currentLesson.videoUrl} 
-                            controls 
-                            className="w-full h-full object-cover"
-                            poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80"
-                        />
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-center">
-                            <PlayCircle className="w-16 h-16 text-white/80 group-hover:scale-105 transition-transform duration-300" />
-                        </div>
+                        {getYouTubeId(currentLesson?.videoUrl) ? (
+                            <iframe
+                                src={`https://www.youtube.com/embed/${getYouTubeId(currentLesson.videoUrl)}?rel=0&autoplay=0`}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                title={ensureBilingual(currentLesson.title)[lang]}
+                            />
+                        ) : (
+                            <>
+                                <video 
+                                    src={currentLesson?.videoUrl} 
+                                    controls 
+                                    className="w-full h-full object-cover"
+                                    poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80"
+                                />
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-center">
+                                    <PlayCircle className="w-16 h-16 text-white/80 group-hover:scale-105 transition-transform duration-300" />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Lesson Meta Data */}
