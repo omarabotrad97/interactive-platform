@@ -248,15 +248,6 @@ export const googleLogin = async (req: Request, res: Response) => {
             user = newUserResult[0];
         }
 
-        // Teachers require approval
-        if (user.role === 'teacher' && !user.isApproved) {
-            return res.status(403).json({
-                message: 'Account pending approval',
-                isApproved: false,
-                role: 'teacher'
-            });
-        }
-
         // Generate token
         const token = jwt.sign({ id: user.id, role: user.role, isApproved: user.isApproved }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
 
