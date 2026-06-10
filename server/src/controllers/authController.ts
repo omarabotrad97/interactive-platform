@@ -79,7 +79,7 @@ export const login = async (req: Request, res: Response) => {
         const userResult = await db.select().from(users).where(eq(users.email, email));
         const user = userResult[0];
 
-        if (!user) {
+        if (!user || !user.password) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
