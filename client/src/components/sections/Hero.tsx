@@ -1,82 +1,90 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { Button } from '../ui/Button';
 import { useStore } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
 
 export default function Hero() {
     const { lang } = useStore();
-    console.log("Testing Antigravity integration - Hero section loaded successfully!");
 
     return (
-        <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white dark:bg-gray-950 transition-colors duration-200">
-            {/* Background elements */}
-            <div className="absolute inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 via-white to-white dark:from-emerald-950/5 dark:via-gray-950 dark:to-gray-950" />
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-100/30 to-transparent dark:from-emerald-900/10 blur-3xl opacity-50" />
-                <div className="absolute bottom-0 left-0 w-1/2 h-full bg-gradient-to-r from-amber-100/20 to-transparent dark:from-amber-900/5 blur-3xl opacity-50" />
-            </div>
+        <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-24 overflow-hidden bg-brutal-cream transition-colors duration-200">
+            {/* Ambient stars */}
+            <div className="absolute top-20 left-12 w-6 h-6 text-amber-400 select-none animate-bounce hidden sm:block">⭐</div>
+            <div className="absolute top-24 right-20 w-6 h-6 text-sky-400 select-none animate-pulse hidden sm:block">⭐</div>
+            <div className="absolute bottom-20 left-20 w-6 h-6 text-[#ff3b69] select-none hidden sm:block">⭐</div>
 
-            {/* Mathematically generated repeating SVG geometric Arabesque background pattern */}
-            <div className="absolute inset-0 -z-5 pointer-events-none opacity-40">
-                <svg className="absolute inset-0 w-full h-full stroke-emerald-600/10 dark:stroke-emerald-400/10 fill-none" width="100%" height="100%">
-                    <pattern id="arabesque" width="100" height="100" patternUnits="userSpaceOnUse">
-                        {/* Star base */}
-                        <path d="M 50,0 L 100,50 L 50,100 L 0,50 Z" strokeWidth="0.75" />
-                        <circle cx="50" cy="50" r="20" strokeWidth="0.75" />
-                        {/* Diagonals */}
-                        <path d="M 0,0 L 100,100 M 100,0 L 0,100" strokeWidth="0.75" />
-                        {/* Inner geometric detailing */}
-                        <polygon points="50,15 62,50 50,85 38,50" strokeWidth="0.5" />
-                        <polygon points="15,50 50,62 85,50 50,38" strokeWidth="0.5" />
-                        <circle cx="50" cy="50" r="5" className="fill-emerald-500/5 dark:fill-emerald-400/5" strokeWidth="0.5" />
-                    </pattern>
-                    <rect width="100%" height="100%" fill="url(#arabesque)" />
-                </svg>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-                {/* Cultural Hook Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-8 animate-fade-in-up border border-emerald-100/50 dark:border-emerald-900/30">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse-ring" />
-                    {getTranslation(lang, 'heroBadge')}
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                {/* Green word worm bubble */}
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#55efc4] border-2 border-slate-900 shadow-[2px_2px_0px_0px_#0f172a] text-slate-900 text-xs font-black mb-10 transform -rotate-1 hover:rotate-0 transition-transform cursor-pointer">
+                    <span>🐛</span>
+                    <span className="font-cairo">
+                        {lang === 'ar' 
+                            ? 'جديد: مستويات بيت الحكمة التفاعلية متوفرة الآن!' 
+                            : 'New: The Interactive Wisdom levels are here!'}
+                    </span>
                 </div>
 
-                {/* Main Hero Header */}
-                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-700 to-amber-500 dark:from-emerald-400 dark:via-teal-400 dark:to-amber-400 leading-tight py-1 select-none">
+                {/* Main Heading with Wiggle-Style Boxes */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight mb-8 font-outfit select-none">
                     {lang === 'ar' ? (
-                        <>
-                            امتلك ناصية المستقبل <br /> بالتعليم والتمكين الرقمي
-                        </>
+                        <div className="leading-[1.4] font-cairo">
+                            التعلم الذي{' '}
+                            <span className="inline-block px-4 py-1 bg-[#ffde00] border-3 border-slate-900 rounded-2xl shadow-[3px_3px_0px_0px_#0f172a] transform -rotate-2 mx-1">
+                                يمرح
+                            </span>
+                            ،{' '}
+                            <span className="inline-block px-4 py-1 bg-[#74b9ff] border-3 border-slate-900 rounded-2xl shadow-[3px_3px_0px_0px_#0f172a] transform rotate-2 mx-1 text-slate-900">
+                                يبهج
+                            </span>{' '}
+                            ويترسخ!
+                        </div>
                     ) : (
-                        getTranslation(lang, 'heroTitle')
+                        <div className="leading-[1.3] font-outfit">
+                            Learning that{' '}
+                            <span className="inline-block px-4 py-1 bg-[#ffde00] border-3 border-slate-900 rounded-2xl shadow-[3px_3px_0px_0px_#0f172a] transform -rotate-2 mx-1">
+                                wiggles
+                            </span>
+                            ,{' '}
+                            <span className="inline-block px-4 py-1 bg-[#74b9ff] border-3 border-slate-900 rounded-2xl shadow-[3px_3px_0px_0px_#0f172a] transform rotate-2 mx-1 text-slate-900">
+                                giggles
+                            </span>{' '}
+                            & sticks!
+                        </div>
                     )}
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-bold">
-                    {getTranslation(lang, 'heroSubtitle')}
+                <p className="text-base sm:text-lg text-slate-700 max-w-xl mx-auto mb-10 leading-relaxed font-bold font-cairo">
+                    {lang === 'ar'
+                        ? 'منصة بيت الحكمة تحوّل المفاهيم الصعبة والمذاكرة الأسبوعية إلى مغامرات ممتعة يتعلمها الطالب بكل شغف واهتمام وبوتيرة مريحة! 📚✨'
+                        : 'House of Wisdom turns challenging topics and weekly revision into laugh-out-loud, interactive adventures that build long-term memory retention! 📚✨'}
                 </p>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-sm sm:max-w-none mx-auto animate-fade-in-up delay-300">
+                {/* Playful Neobrutalist Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-sm sm:max-w-none mx-auto mb-8">
                     <Link to="/auth/signup" className="w-full sm:w-auto">
-                        <Button size="lg" className="h-14 px-8 text-base font-extrabold w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/10 active:scale-95 transition-all">
-                            {getTranslation(lang, 'getStarted')}
-                            {/* Flip arrow direction on RTL */}
-                            <ArrowRight className={`w-5 h-5 ${lang === 'ar' ? 'mr-2 rotate-180' : 'ml-2'}`} />
-                        </Button>
+                        <button className="w-full sm:w-auto h-14 px-8 text-base font-black bg-[#ff5252] hover:bg-[#ff6b6b] text-white border-3 border-slate-900 rounded-2xl shadow-brutal btn-brutal-transition flex items-center justify-center gap-2 font-cairo">
+                            <span>{getTranslation(lang, 'getStarted')} 🚀</span>
+                        </button>
                     </Link>
                     <Link to="/auth/login" className="w-full sm:w-auto">
-                        <Button variant="outline" size="lg" className="h-14 px-8 text-base font-extrabold w-full sm:w-auto border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-xl active:scale-95 transition-all">
-                            {getTranslation(lang, 'exploreCourses')}
-                        </Button>
+                        <button className="w-full sm:w-auto h-14 px-8 text-base font-black bg-white hover:bg-slate-50 text-slate-900 border-3 border-slate-900 rounded-2xl shadow-brutal btn-brutal-transition flex items-center justify-center gap-2 font-cairo">
+                            <span>{getTranslation(lang, 'exploreCourses')} 👀</span>
+                        </button>
                     </Link>
                 </div>
 
-                {/* Weekly news sub-indicator */}
-                <div className="mt-8 text-xs font-bold text-gray-400 dark:text-gray-500">
-                    💡 {getTranslation(lang, 'heroBanner')}
+                {/* Pink wavy svg divider */}
+                <div className="flex justify-center mb-4">
+                    <svg width="60" height="12" viewBox="0 0 60 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 10C5.1 10 7.2 2 10.3 2C13.4 2 15.5 10 18.6 10C21.7 10 23.8 2 26.9 2C30 2 32.1 10 35.2 10C38.3 10 40.4 2 43.5 2C46.6 2 48.7 10 51.8 10C54.9 10 57 2 58.2 2" stroke="#ff8a9b" strokeWidth="4" strokeLinecap="round"/>
+                    </svg>
+                </div>
+
+                {/* Sub-banners */}
+                <div className="text-xs font-black text-slate-500 font-cairo">
+                    {lang === 'ar'
+                        ? 'تثبيت بالذاكرة (Anki) • مؤقت بومودورو للتركيز • لوحة تحكم إشرافية للمعلمين'
+                        : 'Anki Spaced Repetition • Pomodoro Focus Timers • Teacher Oversight Panel'}
                 </div>
             </div>
         </section>

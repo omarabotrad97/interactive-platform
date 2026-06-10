@@ -68,3 +68,43 @@
   animation: level-up-glow 2s infinite ease-in-out;
 }
 
+/* Neobrutalist Design System Helper Classes */
+.bg-brutal-cream {
+  background-color: #FDFBF0;
+}
+
+.border-brutal {
+  border: 3px solid #0f172a;
+}
+
+.border-brutal-sm {
+  border: 2px solid #0f172a;
+}
+
+.shadow-brutal {
+  box-shadow: 4px 4px 0px 0px #0f172a;
+}
+
+.shadow-brutal-lg {
+  box-shadow: 8px 8px 0px 0px #0f172a;
+}
+
+.shadow-brutal-xl {
+  box-shadow: 12px 12px 0px 0px #0f172a;
+}
+
+.btn-brutal-transition {
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-brutal-transition:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #0f172a;
+}
+
+.btn-brutal-transition:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #0f172a;
+}
+
+

@@ -1,5 +1,3 @@
-import { Flame, Sparkles, FileText } from 'lucide-react';
-import { Card, CardContent } from '../ui/Card';
 import { useStore } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
 
@@ -10,54 +8,68 @@ export default function Features() {
         {
             titleKey: 'feature_timer' as const,
             descKey: 'feature_timer_desc' as const,
-            icon: Flame,
-            color: 'bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400',
+            emoji: '⏰',
+            bgColor: 'bg-[#ffde00]', // Yellow
+            rotateClass: '-rotate-1 hover:rotate-0'
         },
         {
             titleKey: 'feature_cards' as const,
             descKey: 'feature_cards_desc' as const,
-            icon: Sparkles,
-            color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400',
+            emoji: '🧠',
+            bgColor: 'bg-[#74b9ff]', // Sky Blue
+            rotateClass: 'rotate-1 hover:rotate-0'
         },
         {
             titleKey: 'feature_notes' as const,
             descKey: 'feature_notes_desc' as const,
-            icon: FileText,
-            color: 'bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400',
+            emoji: '📝',
+            bgColor: 'bg-[#55efc4]', // Soft Green
+            rotateClass: '-rotate-1 hover:rotate-0'
         }
     ];
 
     return (
-        <section id="features" className="py-24 bg-gray-50 dark:bg-gray-900/30 transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="features" className="py-24 bg-brutal-cream transition-colors duration-200 border-t-2 border-slate-900">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">
-                        {getTranslation(lang, 'featuresTitle')}
+                    <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight font-cairo">
+                        {lang === 'ar' ? 'لماذا يعشق الطلاب التعلم في بيت الحكمة؟ 🌟' : getTranslation(lang, 'featuresTitle')}
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 leading-relaxed font-bold">
+                    
+                    {/* Wavy line decor */}
+                    <div className="flex justify-center my-2">
+                        <svg width="40" height="8" viewBox="0 0 40 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6C4.1 6 5.5 2 7.6 2C9.7 2 11.1 6 13.2 6C15.3 6 16.7 2 18.8 2C20.9 2 22.3 6 24.4 6C26.5 6 27.9 2 30 2C32.1 2 33.5 6 35.6 6C37.7 6 38.5 2 39 2" stroke="#ffde00" strokeWidth="3" strokeLinecap="round"/>
+                        </svg>
+                    </div>
+
+                    <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-bold font-cairo">
                         {getTranslation(lang, 'featuresSubtitle')}
                     </p>
                 </div>
 
-                {/* Features Grid */}
+                {/* Playful Features Grid */}
                 <div className="grid md:grid-cols-3 gap-8">
                     {features.map((feature, i) => {
-                        const Icon = feature.icon;
                         return (
-                            <Card key={i} className="border border-gray-100 dark:border-gray-800 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl bg-white dark:bg-gray-900 hover:scale-[1.02]">
-                                <CardContent className="pt-6 pb-6">
-                                    <div className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center mb-5 shadow-sm`}>
-                                        <Icon className="w-6 h-6 animate-pulse-ring" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                                        {getTranslation(lang, feature.titleKey)}
-                                    </h3>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-semibold">
-                                        {getTranslation(lang, feature.descKey)}
-                                    </p>
-                                </CardContent>
-                            </Card>
+                            <div 
+                                key={i} 
+                                className={`rounded-2xl border-brutal shadow-brutal-lg p-8 transform ${feature.rotateClass} transition-all duration-200 ${feature.bgColor}`}
+                            >
+                                {/* Large Emoji Sticker */}
+                                <div className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[3px_3px_0px_0px_#0f172a] text-3xl select-none">
+                                    {feature.emoji}
+                                </div>
+                                
+                                <h3 className="text-xl font-black text-slate-900 mb-4 font-cairo">
+                                    {getTranslation(lang, feature.titleKey)}
+                                </h3>
+                                
+                                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-bold font-cairo">
+                                    {getTranslation(lang, feature.descKey)}
+                                </p>
+                            </div>
                         );
                     })}
                 </div>
