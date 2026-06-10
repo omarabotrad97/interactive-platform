@@ -43,7 +43,7 @@ export default function LoginPage() {
         try {
             // @ts-ignore
             const client = window.google.accounts.oauth2.initTokenClient({
-                client_id: '878235212351-placeholder.apps.googleusercontent.com',
+                client_id: '975205500431-pqnmq6mlg48u9cl66vvkqo56b53b678n.apps.googleusercontent.com',
                 scope: 'email profile openid',
                 callback: async (tokenResponse: any) => {
                     if (tokenResponse.error) {
