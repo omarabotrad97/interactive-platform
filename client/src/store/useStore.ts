@@ -429,9 +429,10 @@ export const useStore = create<AppState>()(
                     await get().loadCourses();
                     get().showToast(get().lang === 'ar' ? 'تم تسجيل الدخول بجوجل بنجاح!' : 'Logged in with Google successfully!', 'success');
                     return { isNewUser: false, user: dbUser };
-                } catch (err) {
+                } catch (err: any) {
                     console.error('Google OAuth API failed:', err);
-                    get().showToast(get().lang === 'ar' ? 'فشل تسجيل الدخول بجوجل: السيرفر غير متصل' : 'Google login failed: Server is offline', 'error');
+                    const errorMsg = err.response?.data?.message || err.message || 'Server offline';
+                    get().showToast(get().lang === 'ar' ? `فشل تسجيل الدخول بجوجل: ${errorMsg}` : `Google login failed: ${errorMsg}`, 'error');
                     throw err;
                 }
             },
