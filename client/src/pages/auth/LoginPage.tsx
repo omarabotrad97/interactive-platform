@@ -1,16 +1,108 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Github, Mail, ArrowRight, BookOpen } from 'lucide-react';
+import { Github, Mail, ArrowRight, BookOpen, GraduationCap, User } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
+import { cn } from '../../lib/utils';
 
 export default function LoginPage() {
     const navigate = useNavigate();
-    const { login, lang, toggleLanguage } = useStore();
+    const { login, loginWithGoogle, lang, toggleLanguage, approvedTeachers, loadApprovedTeachers } = useStore();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Google role selection popup state
+    const [showRoleModal, setShowRoleModal] = useState(false);
+    const [tempGoogleToken, setTempGoogleToken] = useState('');
+    const [googleProfile, setGoogleProfile] = useState({ name: '', email: '' });
+    const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('student');
+    const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
+
+    useEffect(() => {
+        loadApprovedTeachers();
+    }, [loadApprovedTeachers]);
+
+    useEffect(() => {
+        if (approvedTeachers && approvedTeachers.length > 0) {
+            setSelectedTeacherId(approvedTeachers[0].id);
+        }
+    }, [approvedTeachers]);
+
+    const handleGoogleSignIn = () => {
+        // @ts-ignore
+        if (typeof window.google === 'undefined') {
+            setError(lang === 'ar' ? 'فشل تحميل مكتبة جوجل، يرجى المحاولة لاحقاً' : 'Google Identity SDK not loaded yet.');
+            return;
+        }
+
+        setError('');
+        setIsLoading(true);
+
+        try {
+            // @ts-ignore
+            const client = window.google.accounts.oauth2.initTokenClient({
+                client_id: '878235212351-placeholder.apps.googleusercontent.com',
+                scope: 'email profile openid',
+                callback: async (tokenResponse: any) => {
+                    if (tokenResponse.error) {
+                        setError(lang === 'ar' ? 'فشل الاتصال بجوجل' : 'Failed to connect to Google');
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    try {
+                        const res = await loginWithGoogle(tokenResponse.access_token);
+
+                        if (res && res.isNewUser) {
+                            setTempGoogleToken(tokenResponse.access_token);
+                            setGoogleProfile({
+                                name: res.name,
+                                email: res.email
+                            });
+                            setShowRoleModal(true);
+                        } else {
+                            navigate('/dashboard');
+                        }
+                    } catch (err) {
+                        setError(lang === 'ar' ? 'فشل تسجيل الدخول بجوجل' : 'Google login failed');
+                    } finally {
+                        setIsLoading(false);
+                    }
+                },
+            });
+            client.requestAccessToken();
+        } catch (err) {
+            console.error('Google initialization error:', err);
+            setError(lang === 'ar' ? 'فشل تهيئة تسجيل الدخول بجوجل' : 'Google init failed');
+            setIsLoading(false);
+        }
+    };
+
+    const handleCompleteRegistration = async () => {
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const res = await loginWithGoogle(
+                tempGoogleToken,
+                selectedRole,
+                selectedRole === 'student' ? selectedTeacherId : null
+            );
+
+            setShowRoleModal(false);
+            if (selectedRole === 'teacher' && res && !res.user?.isApproved) {
+                navigate('/auth/pending');
+            } else {
+                navigate('/dashboard');
+            }
+        } catch (err) {
+            setError(lang === 'ar' ? 'فشل إكمال التسجيل' : 'Failed to complete registration');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -94,6 +186,8 @@ export default function LoginPage() {
                         <span className="font-semibold text-xs">GitHub</span>
                     </Button>
                     <Button 
+                        type="button"
+                        onClick={handleGoogleSignIn}
                         variant="outline" 
                         className="w-full flex items-center justify-center gap-2 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-colors"
                     >
@@ -174,6 +268,98 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
+
+            {/* Premium Role Selection Modal for new Google users */}
+            {showRoleModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="w-full max-w-md bg-white dark:bg-gray-900 border border-emerald-100/50 dark:border-emerald-900/30 rounded-2xl shadow-2xl p-6 relative">
+                        <div className="text-center mb-6">
+                            <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                                {lang === 'ar' ? 'إكمال تسجيل الحساب' : 'Complete Account Registration'}
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {lang === 'ar' 
+                                    ? `مرحباً ${googleProfile.name}، يرجى اختيار نوع حسابك للمتابعة:` 
+                                    : `Welcome ${googleProfile.name}, please select your account type:`}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-5">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedRole('student')}
+                                className={cn(
+                                    "p-4 rounded-xl border-2 text-center transition-all active:scale-[0.98] flex flex-col items-center gap-2",
+                                    selectedRole === 'student'
+                                        ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-bold"
+                                        : "border-gray-200 dark:border-gray-800 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300"
+                                )}
+                            >
+                                <GraduationCap className="w-8 h-8" />
+                                <span className="text-sm">{lang === 'ar' ? 'طالب' : 'Student'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedRole('teacher')}
+                                className={cn(
+                                    "p-4 rounded-xl border-2 text-center transition-all active:scale-[0.98] flex flex-col items-center gap-2",
+                                    selectedRole === 'teacher'
+                                        ? "border-amber-500 bg-amber-50/30 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-bold"
+                                        : "border-gray-200 dark:border-gray-800 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300"
+                                )}
+                            >
+                                <User className="w-8 h-8" />
+                                <span className="text-sm">{lang === 'ar' ? 'معلم' : 'Teacher'}</span>
+                            </button>
+                        </div>
+
+                        {selectedRole === 'student' && (
+                            <div className="space-y-1.5 text-right mb-6 dir-rtl">
+                                <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block">
+                                    {lang === 'ar' ? 'المعلم المشرف' : 'Supervising Teacher'}
+                                </label>
+                                <select
+                                    value={selectedTeacherId || ''}
+                                    onChange={(e) => setSelectedTeacherId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                                    className="w-full h-10 px-3 text-xs rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 hover:border-emerald-350 dark:hover:border-emerald-750/30 font-bold transition-all shadow-sm outline-none"
+                                >
+                                    {approvedTeachers && approvedTeachers.length > 0 ? (
+                                        approvedTeachers.map((t) => (
+                                            <option key={t.id} value={t.id}>
+                                                {t.name} ({t.email})
+                                            </option>
+                                        ))
+                                    ) : (
+                                        <option value="">
+                                            {lang === 'ar' ? 'المعلم الافتراضي (بيت الحكمة)' : 'Default Master Teacher'}
+                                        </option>
+                                    )}
+                                </select>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setShowRoleModal(false);
+                                    setIsLoading(false);
+                                }}
+                                className="rounded-xl text-xs font-bold"
+                            >
+                                {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                            </Button>
+                            <Button
+                                onClick={handleCompleteRegistration}
+                                className="rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/10"
+                                disabled={isLoading}
+                            >
+                                {lang === 'ar' ? 'إتمام التسجيل' : 'Complete Sign Up'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

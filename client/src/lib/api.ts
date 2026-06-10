@@ -21,6 +21,7 @@ api.interceptors.request.use(
 export const auth = {
     register: (userData: any) => api.post('/auth/register', userData),
     login: (credentials: any) => api.post('/auth/login', credentials),
+    googleLogin: (data: { accessToken: string; role?: string; assignedTeacherId?: number | null }) => api.post('/auth/google', data),
     getProfile: () => api.get('/auth/me'),
     getApprovedTeachers: () => api.get('/auth/teachers'),
 };

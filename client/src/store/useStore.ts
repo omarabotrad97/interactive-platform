@@ -75,6 +75,7 @@ interface AppState {
     // Authentication
     isAuthenticated: boolean;
     login: (email?: string, password?: string) => Promise<void>;
+    loginWithGoogle: (accessToken: string, role?: 'student' | 'teacher', assignedTeacherId?: number | null) => Promise<any>;
     logout: () => void;
     user: User;
     updateUser: (user: Partial<User>) => void;
@@ -392,6 +393,45 @@ export const useStore = create<AppState>()(
                 } catch (err) {
                     console.error('API login failed:', err);
                     get().showToast(get().lang === 'ar' ? 'فشل تسجيل الدخول: البريد الإلكتروني أو كلمة المرور غير صحيحة أو السيرفر غير متصل' : 'Login failed: Invalid credentials or server is offline', 'error');
+                    throw err;
+                }
+            },
+
+            loginWithGoogle: async (accessToken, role, assignedTeacherId = null) => {
+                try {
+                    const res = await api.auth.googleLogin({ accessToken, role, assignedTeacherId });
+                    
+                    if (res.data.isNewUser) {
+                        return res.data;
+                    }
+                    
+                    const { user: dbUser, token } = res.data;
+                    localStorage.setItem('token', token);
+                    
+                    set({
+                        isAuthenticated: true,
+                        xp: dbUser.xp,
+                        level: dbUser.level,
+                        badges: dbUser.badges || [],
+                        completedLessons: dbUser.completedLessons || [],
+                        user: {
+                            firstName: dbUser.name.split(' ')[0] || '',
+                            lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
+                            email: dbUser.email,
+                            role: dbUser.role,
+                            isApproved: dbUser.isApproved,
+                            assignedTeacherId: dbUser.assignedTeacherId,
+                            assignedTeacher: dbUser.assignedTeacher,
+                            bio: 'متصل بحساب جوجل وقاعدة البيانات.',
+                        }
+                    });
+                    
+                    await get().loadCourses();
+                    get().showToast(get().lang === 'ar' ? 'تم تسجيل الدخول بجوجل بنجاح!' : 'Logged in with Google successfully!', 'success');
+                    return { isNewUser: false, user: dbUser };
+                } catch (err) {
+                    console.error('Google OAuth API failed:', err);
+                    get().showToast(get().lang === 'ar' ? 'فشل تسجيل الدخول بجوجل: السيرفر غير متصل' : 'Google login failed: Server is offline', 'error');
                     throw err;
                 }
             },

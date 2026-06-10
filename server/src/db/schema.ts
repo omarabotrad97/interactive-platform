@@ -10,7 +10,8 @@ export const users = pgTable('users', {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
     email: text('email').notNull().unique(),
-    password: text('password').notNull(),
+    password: text('password'),
+    googleId: text('google_id').unique(),
     role: roleEnum('role').default('student'),
     isApproved: boolean('is_approved').default(true).notNull(), // True for students/admins, false for teachers until approved
     assignedTeacherId: integer('assigned_teacher_id').references((): any => users.id), // Reference to the assigned teacher user

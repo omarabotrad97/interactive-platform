@@ -9,7 +9,7 @@ import { cn } from '../../lib/utils';
 
 export default function SignUpPage() {
     const navigate = useNavigate();
-    const { register, lang, toggleLanguage, approvedTeachers, loadApprovedTeachers } = useStore();
+    const { register, loginWithGoogle, lang, toggleLanguage, approvedTeachers, loadApprovedTeachers } = useStore();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
@@ -21,6 +21,55 @@ export default function SignUpPage() {
     const [assignedTeacherId, setAssignedTeacherId] = useState<number | null>(null);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [error, setError] = useState('');
+
+    const handleGoogleSignUp = () => {
+        // @ts-ignore
+        if (typeof window.google === 'undefined') {
+            setError(lang === 'ar' ? 'فشل تحميل مكتبة جوجل، يرجى المحاولة لاحقاً' : 'Google Identity SDK not loaded yet.');
+            return;
+        }
+
+        setError('');
+        setIsLoading(true);
+
+        try {
+            // @ts-ignore
+            const client = window.google.accounts.oauth2.initTokenClient({
+                client_id: '878235212351-placeholder.apps.googleusercontent.com',
+                scope: 'email profile openid',
+                callback: async (tokenResponse: any) => {
+                    if (tokenResponse.error) {
+                        setError(lang === 'ar' ? 'فشل الاتصال بجوجل' : 'Failed to connect to Google');
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    try {
+                        const res = await loginWithGoogle(
+                            tokenResponse.access_token,
+                            role,
+                            role === 'student' ? assignedTeacherId : null
+                        );
+
+                        if (role === 'teacher' && res && !res.user?.isApproved) {
+                            navigate('/auth/pending');
+                        } else {
+                            navigate('/dashboard');
+                        }
+                    } catch (err) {
+                        setError(lang === 'ar' ? 'فشل التسجيل بجوجل' : 'Google sign up failed');
+                    } finally {
+                        setIsLoading(false);
+                    }
+                },
+            });
+            client.requestAccessToken();
+        } catch (err) {
+            console.error('Google initialization error:', err);
+            setError(lang === 'ar' ? 'فشل تهيئة التسجيل بجوجل' : 'Google init failed');
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         loadApprovedTeachers();
@@ -135,6 +184,8 @@ export default function SignUpPage() {
                         <span className="font-semibold text-xs">GitHub</span>
                     </Button>
                     <Button 
+                        type="button"
+                        onClick={handleGoogleSignUp}
                         variant="outline" 
                         className="w-full flex items-center justify-center gap-2 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-colors"
                     >

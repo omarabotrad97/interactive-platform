@@ -180,3 +180,104 @@ export const getApprovedTeachers = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const googleLogin = async (req: Request, res: Response) => {
+    try {
+        const { accessToken, role, assignedTeacherId } = req.body;
+        
+        if (!accessToken) {
+            return res.status(400).json({ message: 'Access token is required' });
+        }
+
+        // Fetch user info from Google
+        const googleResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        if (!googleResponse.ok) {
+            return res.status(401).json({ message: 'Invalid Google access token' });
+        }
+
+        const googleUser = await googleResponse.json();
+        const { sub, email, name } = googleUser;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email not provided by Google' });
+        }
+
+        // Check if user exists by googleId
+        let dbUserResult = await db.select().from(users).where(eq(users.googleId, sub));
+        let user = dbUserResult[0];
+
+        // If not found by googleId, check by email (to support linking existing accounts)
+        if (!user) {
+            dbUserResult = await db.select().from(users).where(eq(users.email, email));
+            user = dbUserResult[0];
+            
+            if (user) {
+                // Link Google account to this existing email user
+                await db.update(users).set({ googleId: sub }).where(eq(users.id, user.id));
+                user.googleId = sub;
+            }
+        }
+
+        // If user still does not exist, it's a new registration via Google
+        if (!user) {
+            if (!role) {
+                return res.json({
+                    isNewUser: true,
+                    email,
+                    name,
+                    googleId: sub
+                });
+            }
+
+            // Create new user
+            const isApproved = role !== 'teacher';
+            const newUserResult = await db.insert(users).values({
+                name,
+                email,
+                googleId: sub,
+                role,
+                isApproved,
+                assignedTeacherId: role === 'student' ? assignedTeacherId : null,
+            }).returning();
+            
+            user = newUserResult[0];
+        }
+
+        // Teachers require approval
+        if (user.role === 'teacher' && !user.isApproved) {
+            return res.status(403).json({
+                message: 'Account pending approval',
+                isApproved: false,
+                role: 'teacher'
+            });
+        }
+
+        // Generate token
+        const token = jwt.sign({ id: user.id, role: user.role, isApproved: user.isApproved }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isApproved: user.isApproved,
+                assignedTeacherId: user.assignedTeacherId,
+                xp: user.xp,
+                level: user.level,
+                badges: user.badges,
+                completedLessons: user.completedLessons
+            },
+            token
+        });
+    } catch (error) {
+        console.error('Google login error:', error);
+        res.status(500).json({ message: 'Server error during Google authentication' });
+    }
+};
+
