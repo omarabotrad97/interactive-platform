@@ -171,6 +171,8 @@ export const translations = {
         authTermsError: "You must accept the terms and conditions",
         authPassLengthError: "Password must be at least 8 characters",
         authCreatingAccount: "Creating account...",
+        authGoogleSignIn: "Sign in with Google",
+        authGoogleSignUp: "Sign up with Google",
         authQuote: "The head of knowledge is the desire for it, and its fruit is practicing it."
     },
     ar: {
@@ -345,6 +347,8 @@ export const translations = {
         authTermsError: "يجب عليك قبول الشروط والأحكام",
         authPassLengthError: "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
         authCreatingAccount: "جاري إنشاء الحساب...",
+        authGoogleSignIn: "تسجيل الدخول بواسطة Google",
+        authGoogleSignUp: "التسجيل بواسطة Google",
         authQuote: "رأسُ العلمِ الرغبةُ فيه، وثمرته العملُ به."
     }
 };

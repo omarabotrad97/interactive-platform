@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Github, Mail, ArrowRight, BookOpen, User, GraduationCap } from 'lucide-react';
+import { Mail, ArrowRight, BookOpen, User, GraduationCap } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
@@ -175,22 +175,17 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Social Login */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                    <Button 
-                        variant="outline" 
-                        className="w-full flex items-center justify-center gap-2 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-colors"
-                    >
-                        <Github className="w-5 h-5 text-gray-900 dark:text-white" />
-                        <span className="font-semibold text-xs">GitHub</span>
-                    </Button>
+                <div className="mb-6">
                     <Button 
                         type="button"
                         onClick={handleGoogleSignUp}
                         variant="outline" 
-                        className="w-full flex items-center justify-center gap-2 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-colors"
+                        className="w-full flex items-center justify-center gap-2.5 border-gray-200 hover:border-emerald-200 dark:border-gray-800 dark:hover:border-emerald-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 text-gray-700 dark:text-gray-300 transition-all duration-300 py-2.5 h-11"
                     >
                         <Mail className="w-5 h-5 text-red-500" />
-                        <span className="font-semibold text-xs">Google</span>
+                        <span className="font-bold text-xs">
+                            {getTranslation(lang, 'authGoogleSignUp')}
+                        </span>
                     </Button>
                 </div>
 
