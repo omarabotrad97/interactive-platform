@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    baseURL: 'https://wisdom-house-api.onrender.com/api',
 });
 
 // Add a request interceptor to add the JWT token to headers
