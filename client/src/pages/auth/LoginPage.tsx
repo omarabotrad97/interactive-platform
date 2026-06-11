@@ -43,7 +43,7 @@ export default function LoginPage() {
         try {
             // @ts-ignore
             const client = window.google.accounts.oauth2.initTokenClient({
-                client_id: '975205500431-pqnmq6mlg48u9cl66vvkqo56b53b678n.apps.googleusercontent.com',
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
                 scope: 'email profile openid',
                 callback: async (tokenResponse: any) => {
                     if (tokenResponse.error) {
@@ -63,10 +63,20 @@ export default function LoginPage() {
                             });
                             setShowRoleModal(true);
                         } else {
-                            navigate('/dashboard');
+                            const latestUser = useStore.getState().user;
+                            if (latestUser.role === 'teacher' && !latestUser.isApproved) {
+                                navigate('/auth/pending');
+                            } else if (latestUser.role === 'admin') {
+                                navigate('/admin');
+                            } else if (latestUser.role === 'teacher') {
+                                navigate('/teacher/courses');
+                            } else {
+                                navigate('/dashboard');
+                            }
                         }
-                    } catch (err) {
-                        setError(lang === 'ar' ? 'فشل تسجيل الدخول بجوجل' : 'Google login failed');
+                    } catch (err: any) {
+                        const message = err.response?.data?.message || err.message;
+                        setError(message || (lang === 'ar' ? 'فشل تسجيل الدخول بجوجل' : 'Google login failed'));
                     } finally {
                         setIsLoading(false);
                     }
@@ -85,15 +95,20 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const res = await loginWithGoogle(
+            await loginWithGoogle(
                 tempGoogleToken,
                 selectedRole,
                 selectedRole === 'student' ? selectedTeacherId : null
             );
 
             setShowRoleModal(false);
-            if (selectedRole === 'teacher' && res && !res.user?.isApproved) {
+            const latestUser = useStore.getState().user;
+            if (latestUser.role === 'teacher' && !latestUser.isApproved) {
                 navigate('/auth/pending');
+            } else if (latestUser.role === 'admin') {
+                navigate('/admin');
+            } else if (latestUser.role === 'teacher') {
+                navigate('/teacher/courses');
             } else {
                 navigate('/dashboard');
             }
@@ -115,7 +130,16 @@ export default function LoginPage() {
 
         try {
             await login(email, password);
-            navigate('/dashboard');
+            const latestUser = useStore.getState().user;
+            if (latestUser.role === 'teacher' && !latestUser.isApproved) {
+                navigate('/auth/pending');
+            } else if (latestUser.role === 'admin') {
+                navigate('/admin');
+            } else if (latestUser.role === 'teacher') {
+                navigate('/teacher/courses');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             console.error('Login error:', err);
             setError(lang === 'ar' ? 'فشل تسجيل الدخول: البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Login failed: Invalid email or password');

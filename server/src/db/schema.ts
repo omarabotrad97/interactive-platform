@@ -47,8 +47,8 @@ export const lessons = pgTable('lessons', {
 // Enrollments (Students <-> Courses)
 export const enrollments = pgTable('enrollments', {
     id: serial('id').primaryKey(),
-    userId: integer('user_id').references(() => users.id).notNull(),
-    courseId: integer('course_id').references(() => courses.id).notNull(),
+    userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    courseId: integer('course_id').references(() => courses.id, { onDelete: 'cascade' }).notNull(),
     enrolledAt: timestamp('enrolled_at').defaultNow(),
 });
 
@@ -73,8 +73,8 @@ export const questions = pgTable('questions', {
 // Results / Progress (Quiz completion)
 export const results = pgTable('results', {
     id: serial('id').primaryKey(),
-    userId: integer('user_id').references(() => users.id).notNull(),
-    quizId: integer('quiz_id').references(() => quizzes.id).notNull(),
+    userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    quizId: integer('quiz_id').references(() => quizzes.id, { onDelete: 'cascade' }).notNull(),
     score: integer('score').notNull(),
     completedAt: timestamp('completed_at').defaultNow(),
 });
@@ -82,8 +82,8 @@ export const results = pgTable('results', {
 // Smart Notes Table
 export const notes = pgTable('notes', {
     id: serial('id').primaryKey(),
-    userId: integer('user_id').references(() => users.id).notNull(),
-    lessonId: integer('lesson_id').references(() => lessons.id).notNull(),
+    userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    lessonId: integer('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }).notNull(),
     content: text('content').notNull(),
     updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -100,8 +100,8 @@ export const flashcards = pgTable('flashcards', {
 // User Spaced Repetition Flashcard Progress Table
 export const flashcardProgress = pgTable('flashcard_progress', {
     id: serial('id').primaryKey(),
-    userId: integer('user_id').references(() => users.id).notNull(),
-    flashcardId: integer('flashcard_id').references(() => flashcards.id).notNull(),
+    userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    flashcardId: integer('flashcard_id').references(() => flashcards.id, { onDelete: 'cascade' }).notNull(),
     repetitions: integer('repetitions').default(0).notNull(),
     easeFactor: real('ease_factor').default(2.5).notNull(),
     interval: integer('interval').default(0).notNull(), // in days

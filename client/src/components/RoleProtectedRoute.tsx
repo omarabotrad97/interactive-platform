@@ -17,7 +17,7 @@ export default function RoleProtectedRoute({ allowedRoles }: RoleProtectedRouteP
         return <Navigate to="/auth/pending" replace />;
     }
 
-    if (allowedRoles && user.role && !allowedRoles.includes(user.role)) {
+    if (allowedRoles && (!user.role || !allowedRoles.includes(user.role))) {
         return <Navigate to="/dashboard" replace />;
     }
 

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { getTranslation } from '../../lib/translations';
+import { Button } from '../ui/Button';
 
 export default function Hero() {
     const { lang } = useStore();
@@ -62,14 +63,14 @@ export default function Hero() {
                 {/* Playful Neobrutalist Action Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-sm sm:max-w-none mx-auto mb-8">
                     <Link to="/auth/signup" className="w-full sm:w-auto">
-                        <button className="w-full sm:w-auto h-14 px-8 text-base font-black bg-[#ff5252] hover:bg-[#ff6b6b] text-white border-3 border-slate-900 rounded-2xl shadow-brutal btn-brutal-transition flex items-center justify-center gap-2 font-cairo">
+                        <Button variant="brutal" className="w-full sm:w-auto h-14 px-8 text-base bg-[#ff5252] hover:bg-[#ff6b6b] text-white font-cairo">
                             <span>{getTranslation(lang, 'getStarted')} 🚀</span>
-                        </button>
+                        </Button>
                     </Link>
                     <Link to="/auth/login" className="w-full sm:w-auto">
-                        <button className="w-full sm:w-auto h-14 px-8 text-base font-black bg-white hover:bg-slate-50 text-slate-900 border-3 border-slate-900 rounded-2xl shadow-brutal btn-brutal-transition flex items-center justify-center gap-2 font-cairo">
+                        <Button variant="brutal" className="w-full sm:w-auto h-14 px-8 text-base bg-white hover:bg-slate-50 text-slate-900 font-cairo">
                             <span>{getTranslation(lang, 'exploreCourses')} 👀</span>
-                        </button>
+                        </Button>
                     </Link>
                 </div>
 

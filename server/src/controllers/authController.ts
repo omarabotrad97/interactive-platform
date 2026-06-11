@@ -11,7 +11,7 @@ const registerSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
     password: z.string().min(6),
-    role: z.enum(['student', 'teacher', 'admin']).optional().default('student'),
+    role: z.enum(['student', 'teacher']).optional().default('student'),
     assignedTeacherId: z.number().int().optional().nullable(),
 });
 
@@ -217,7 +217,13 @@ export const googleLogin = async (req: Request, res: Response) => {
             user = dbUserResult[0];
             
             if (user) {
-                // Link Google account to this existing email user
+                // If an account exists but does not have a googleId linked:
+                if (!user.googleId) {
+                    return res.status(400).json({
+                        message: "An account with this email already exists. Please log in with your password to link your Google account."
+                    });
+                }
+                // (If they do have googleId, it would have been found in the first select; but check to be safe)
                 await db.update(users).set({ googleId: sub }).where(eq(users.id, user.id));
                 user.googleId = sub;
             }

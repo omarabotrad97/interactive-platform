@@ -2,7 +2,7 @@ import { HTMLAttributes, forwardRef } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-    variant?: 'default' | 'elevated' | 'glass';
+    variant?: 'default' | 'elevated' | 'glass' | 'brutal';
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -11,6 +11,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
             default: 'bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800',
             elevated: 'bg-white shadow-xl shadow-gray-200/50 dark:bg-gray-900 dark:shadow-none dark:border dark:border-gray-800',
             glass: 'bg-white/80 backdrop-blur-lg border border-white/20 shadow-xl dark:bg-gray-900/80 dark:border-white/10',
+            brutal: 'border-brutal rounded-3xl shadow-brutal-lg transition-all duration-200',
         };
 
         return (

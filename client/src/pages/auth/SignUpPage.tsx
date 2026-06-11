@@ -35,7 +35,7 @@ export default function SignUpPage() {
         try {
             // @ts-ignore
             const client = window.google.accounts.oauth2.initTokenClient({
-                client_id: '975205500431-pqnmq6mlg48u9cl66vvkqo56b53b678n.apps.googleusercontent.com',
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
                 scope: 'email profile openid',
                 callback: async (tokenResponse: any) => {
                     if (tokenResponse.error) {
@@ -45,19 +45,25 @@ export default function SignUpPage() {
                     }
 
                     try {
-                        const res = await loginWithGoogle(
+                        await loginWithGoogle(
                             tokenResponse.access_token,
                             role,
                             role === 'student' ? assignedTeacherId : null
                         );
 
-                        if (role === 'teacher' && res && !res.user?.isApproved) {
+                        const latestUser = useStore.getState().user;
+                        if (latestUser.role === 'teacher' && !latestUser.isApproved) {
                             navigate('/auth/pending');
+                        } else if (latestUser.role === 'admin') {
+                            navigate('/admin');
+                        } else if (latestUser.role === 'teacher') {
+                            navigate('/teacher/courses');
                         } else {
                             navigate('/dashboard');
                         }
-                    } catch (err) {
-                        setError(lang === 'ar' ? 'فشل التسجيل بجوجل' : 'Google sign up failed');
+                    } catch (err: any) {
+                        const message = err.response?.data?.message || err.message;
+                        setError(message || (lang === 'ar' ? 'فشل التسجيل بجوجل' : 'Google sign up failed'));
                     } finally {
                         setIsLoading(false);
                     }
@@ -109,8 +115,12 @@ export default function SignUpPage() {
             
             // Get latest store state for approval redirection
             const latestUser = useStore.getState().user;
-            if (role === 'teacher' && !latestUser.isApproved) {
+            if (latestUser.role === 'teacher' && !latestUser.isApproved) {
                 navigate('/auth/pending');
+            } else if (latestUser.role === 'admin') {
+                navigate('/admin');
+            } else if (latestUser.role === 'teacher') {
+                navigate('/teacher/courses');
             } else {
                 navigate('/dashboard');
             }
